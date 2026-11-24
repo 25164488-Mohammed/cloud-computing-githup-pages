@@ -1,0 +1,3037 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="منصة تعليمية عربية تفاعلية لشرح خدمة GitHub Pages في مقرر الحوسبة السحابية — Cloud-Based Static Website Hosting and Deployment." />
+  <title>GitHub Pages — Cloud-Based Static Website Hosting and Deployment</title>
+  <style>
+    /* =========================================================================
+       1. DESIGN TOKENS & BASE RESET (100% OFFLINE — ZERO EXTERNAL DEPENDENCIES)
+       ========================================================================= */
+    :root {
+      --bg-deep: #040b18;
+      --bg-navy: #071329;
+      --bg-navy-alt: #0a1a38;
+      --surface-glass: rgba(11, 27, 56, 0.72);
+      --surface-card: rgba(12, 31, 66, 0.82);
+      --surface-card-hover: rgba(17, 42, 88, 0.92);
+
+      --cyan: #22d3ee;
+      --cyan-bright: #67e8f9;
+      --sky: #38bdf8;
+      --blue: #3b82f6;
+      --blue-bright: #60a5fa;
+      --indigo: #818cf8;
+      --purple: #a855f7;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #fb7185;
+
+      --border-subtle: rgba(148, 163, 184, 0.16);
+      --border-cyan: rgba(34, 211, 238, 0.34);
+      --border-blue: rgba(59, 130, 246, 0.34);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+
+      --font-ar: 'Segoe UI', 'SF Pro Arabic', 'Geeza Pro', 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif;
+      --font-en: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace;
+
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --shadow-card: 0 16px 40px rgba(2, 6, 23, 0.45);
+      --shadow-glow: 0 0 36px rgba(34, 211, 238, 0.18);
+      --nav-height: 74px;
+      --container-max: 1200px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--nav-height) + 18px);
+      background-color: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-ar);
+      line-height: 1.75;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 12%, rgba(34, 211, 238, 0.11) 0%, transparent 38%),
+        radial-gradient(circle at 86% 20%, rgba(59, 130, 246, 0.14) 0%, transparent 42%),
+        radial-gradient(circle at 50% 75%, rgba(14, 165, 233, 0.08) 0%, transparent 48%),
+        linear-gradient(180deg, #040b18 0%, #071329 45%, #050f22 100%);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Subtle Ambient Technical Grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+      background-size: 56px 56px;
+      pointer-events: none;
+      z-index: 0;
+      mask-image: radial-gradient(ellipse at 50% 25%, rgba(0, 0, 0, 0.8) 10%, transparent 85%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 25%, rgba(0, 0, 0, 0.8) 10%, transparent 85%);
+    }
+
+    main, header, footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Strict LTR isolation for English terms, code snippets, and URLs inside RTL Arabic */
+    .ltr {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      font-family: var(--font-en);
+    }
+
+    .code-tag {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      color: var(--cyan-bright);
+      background: rgba(34, 211, 238, 0.11);
+      border: 1px solid rgba(34, 211, 238, 0.28);
+      border-radius: 6px;
+      padding: 1px 8px;
+      line-height: 1.5;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    img, svg {
+      max-width: 100%;
+      display: block;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--container-max);
+      margin-inline: auto;
+      padding-inline: 24px;
+    }
+
+    /* Reading Progress Bar */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      inset-inline-start: 0;
+      height: 3px;
+      width: 0%;
+      background: linear-gradient(270deg, var(--cyan), var(--blue), var(--indigo));
+      z-index: 120;
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.7);
+      transition: width 0.08s linear;
+    }
+
+    /* =========================================================================
+       2. GLASS NAVIGATION BAR (RTL + MOBILE DRAWER)
+       ========================================================================= */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-height);
+      background: rgba(4, 11, 24, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .nav-inner {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(59, 130, 246, 0.3));
+      border: 1px solid var(--border-cyan);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.18);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .brand-sub {
+      font-size: 0.74rem;
+      color: var(--cyan-bright);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      padding: 8px 12px;
+      border-radius: 9px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: color 0.2s ease, background 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--cyan-bright);
+      background: rgba(34, 211, 238, 0.11);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .nav-motion-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #031122;
+      background: linear-gradient(135deg, var(--cyan-bright), var(--sky));
+      box-shadow: 0 6px 20px rgba(34, 211, 238, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-motion-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px rgba(34, 211, 238, 0.42);
+    }
+
+    .nav-toggle {
+      display: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      border: 1px solid var(--border-cyan);
+      background: rgba(12, 31, 66, 0.85);
+      color: var(--text-primary);
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Mobile Drawer */
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: var(--nav-height);
+      inset-inline: 0;
+      background: rgba(5, 13, 30, 0.97);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border-cyan);
+      padding: 18px 24px 24px;
+      z-index: 99;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    .mobile-drawer.open {
+      display: block;
+    }
+
+    .mobile-drawer ul {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .mobile-drawer a {
+      display: block;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(15, 34, 72, 0.65);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .mobile-drawer a:hover {
+      border-color: var(--border-cyan);
+      color: var(--cyan-bright);
+    }
+
+    /* =========================================================================
+       3. BUTTONS, BADGES & SHARED SECTION ARCHITECTURE
+       ========================================================================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 24px;
+      border-radius: 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+      color: #031020;
+      box-shadow: 0 10px 30px rgba(34, 211, 238, 0.28);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 36px rgba(34, 211, 238, 0.42);
+    }
+
+    .btn-glass {
+      background: rgba(14, 34, 72, 0.76);
+      border-color: var(--border-cyan);
+      color: var(--text-primary);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-glass:hover {
+      background: rgba(20, 48, 98, 0.9);
+      border-color: var(--cyan-bright);
+      transform: translateY(-2px);
+    }
+
+    .section {
+      padding-block: 84px;
+      position: relative;
+    }
+
+    .section-header {
+      margin-bottom: 42px;
+      max-width: 780px;
+    }
+
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.11);
+      border: 1px solid rgba(34, 211, 238, 0.34);
+      color: var(--cyan-bright);
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: clamp(1.7rem, 3vw, 2.35rem);
+      font-weight: 800;
+      line-height: 1.3;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .section-lead {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.85;
+    }
+
+    .glass-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-card);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    }
+
+    .glass-card:hover {
+      border-color: var(--border-cyan);
+      background: var(--surface-card-hover);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card), var(--shadow-glow);
+    }
+
+    /* Scroll Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* =========================================================================
+       4. HERO SECTION + ANIMATED CLOUD JOURNEY SVG
+       ========================================================================= */
+    .hero {
+      padding-top: 64px;
+      padding-bottom: 72px;
+      position: relative;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 44px;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      background: rgba(14, 34, 72, 0.82);
+      border: 1px solid var(--border-cyan);
+      color: var(--cyan-bright);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50%      { transform: scale(1.3); opacity: 1; }
+    }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 5vw, 3.85rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      background: linear-gradient(90deg, #ffffff 0%, #67e8f9 55%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.28rem, 2.3vw, 1.65rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      line-height: 1.45;
+    }
+
+    .hero-desc {
+      font-size: 1.06rem;
+      color: var(--text-secondary);
+      line-height: 1.85;
+      margin-bottom: 28px;
+      max-width: 58ch;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    .hero-pillars {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .hero-pillar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: rgba(11, 27, 56, 0.72);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+    }
+
+    .hero-pillar strong {
+      color: var(--cyan-bright);
+    }
+
+    /* Hero Animated Diagram Card */
+    .hero-visual {
+      padding: 22px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(155deg, rgba(11, 30, 66, 0.88), rgba(6, 16, 36, 0.92));
+      border: 1px solid var(--border-cyan);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 42px rgba(34, 211, 238, 0.14);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-visual-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 14px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .hero-visual-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--cyan-bright);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-anim-toggle {
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-cyan);
+      background: rgba(34, 211, 238, 0.12);
+      color: var(--cyan-bright);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .hero-visual.paused svg * {
+      animation-play-state: paused !important;
+    }
+
+    .hero-visual-caption .code-tag { white-space: nowrap; flex-shrink: 0; }
+
+    .hero-visual-caption {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(4, 11, 24, 0.75);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* SVG Motion Keyframes */
+    @keyframes dashMove {
+      to { stroke-dashoffset: -40; }
+    }
+
+    @keyframes packetTravel {
+      0%   { offset-distance: 0%; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { offset-distance: 100%; opacity: 0; }
+    }
+
+    @keyframes floatSoft {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-5px); }
+    }
+
+    @keyframes spinGear {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .svg-dash {
+      stroke-dasharray: 7 7;
+      animation: dashMove 1.6s linear infinite;
+    }
+
+    .svg-float {
+      animation: floatSoft 3.8s ease-in-out infinite;
+    }
+
+    .svg-spin {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: spinGear 10s linear infinite;
+    }
+
+    /* =========================================================================
+       5. SECTION 1 (INTRO) & SECTION 2 (WHAT IS GITHUB PAGES)
+       ========================================================================= */
+    .intro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .info-card {
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .icon-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid var(--border-cyan);
+      display: grid;
+      place-items: center;
+      color: var(--cyan-bright);
+      flex-shrink: 0;
+    }
+
+    .icon-box.blue {
+      background: rgba(59, 130, 246, 0.14);
+      border-color: var(--border-blue);
+      color: var(--blue-bright);
+    }
+
+    .icon-box.emerald {
+      background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(16, 185, 129, 0.38);
+      color: #6ee7b7;
+    }
+
+    .icon-box.rose {
+      background: rgba(251, 113, 133, 0.12);
+      border-color: rgba(251, 113, 133, 0.36);
+      color: #fda4af;
+    }
+
+    .icon-box.purple {
+      background: rgba(168, 85, 247, 0.14);
+      border-color: rgba(168, 85, 247, 0.38);
+      color: #d8b4fe;
+    }
+
+    .info-card h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .info-card p {
+      font-size: 0.96rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .what-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    .what-main {
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .what-points {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .what-point {
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(5, 14, 32, 0.68);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .what-point strong {
+      display: block;
+      font-size: 0.94rem;
+      color: var(--cyan-bright);
+      margin-bottom: 4px;
+    }
+
+    .what-point span {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+
+    .what-side {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: linear-gradient(160deg, rgba(13, 35, 76, 0.86), rgba(7, 19, 42, 0.92));
+      border-color: var(--border-cyan);
+    }
+
+    .site-type-box {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(4, 11, 24, 0.72);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .site-type-box h4 {
+      font-size: 0.98rem;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .site-type-box p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    /* =========================================================================
+       6. SECTION 3: HOW IT WORKS (INTERACTIVE 5-STAGE PIPELINE)
+       ========================================================================= */
+    .pipeline-shell {
+      padding: 28px;
+    }
+
+    .pipeline-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .pipeline-hint {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .pipeline-nodes {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .pipe-node {
+      position: relative;
+      padding: 20px 14px;
+      border-radius: 14px;
+      background: rgba(6, 17, 38, 0.86);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+    }
+
+    .pipe-node:hover {
+      border-color: var(--border-cyan);
+      transform: translateY(-2px);
+    }
+
+    .pipe-node.active {
+      background: linear-gradient(155deg, rgba(16, 48, 98, 0.95), rgba(8, 25, 56, 0.95));
+      border-color: var(--cyan);
+      box-shadow: 0 0 28px rgba(34, 211, 238, 0.25);
+    }
+
+    .pipe-step-num {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.14);
+      color: var(--cyan-bright);
+    }
+
+    .pipe-en {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--cyan-bright);
+    }
+
+    .pipe-ar {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .pipe-detail-panel {
+      padding: 24px 26px;
+      border-radius: 14px;
+      background: rgba(4, 12, 28, 0.82);
+      border: 1px solid var(--border-cyan);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .pipe-detail-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--cyan-bright);
+      margin-bottom: 6px;
+    }
+
+    .pipe-detail-text {
+      font-size: 0.98rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .pipe-detail-meta {
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(14, 34, 72, 0.72);
+      border: 1px solid var(--border-subtle);
+      min-width: 220px;
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+    }
+
+    .pipe-detail-meta strong {
+      display: block;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    /* =========================================================================
+       7. SECTION 4: INTERACTIVE ARCHITECTURE DIAGRAM (8 NODES)
+       ========================================================================= */
+    .arch-wrapper {
+      padding: 28px;
+    }
+
+    .arch-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .arch-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .arch-filter-btn {
+      padding: 8px 15px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(7, 19, 42, 0.85);
+      color: var(--text-secondary);
+      font-size: 0.86rem;
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .arch-filter-btn:hover {
+      border-color: var(--border-cyan);
+      color: var(--text-primary);
+    }
+
+    .arch-filter-btn.active {
+      background: rgba(34, 211, 238, 0.16);
+      border-color: var(--cyan);
+      color: var(--cyan-bright);
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.2);
+    }
+
+    .arch-canvas {
+      border-radius: 16px;
+      background: rgba(4, 11, 24, 0.86);
+      border: 1px solid var(--border-subtle);
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .arch-svg {
+      width: 100%;
+      min-width: 780px;
+      height: auto;
+    }
+
+    .arch-node {
+      cursor: pointer;
+      transition: opacity 0.28s ease, filter 0.28s ease;
+    }
+
+    .arch-node.dimmed {
+      opacity: 0.28;
+    }
+
+    .arch-node.highlighted {
+      filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.7));
+    }
+
+    .arch-edge {
+      transition: opacity 0.28s ease, stroke-width 0.28s ease;
+    }
+
+    .arch-edge.dimmed {
+      opacity: 0.18;
+    }
+
+    .arch-inspector {
+      margin-top: 20px;
+      padding: 20px 24px;
+      border-radius: 14px;
+      background: rgba(8, 22, 48, 0.85);
+      border: 1px solid var(--border-cyan);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .arch-inspector-main {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .arch-inspector-tag {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--cyan-bright);
+      background: rgba(34, 211, 238, 0.14);
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+
+    .arch-inspector h3 {
+      font-size: 1.12rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .arch-inspector p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    /* =========================================================================
+       8. SECTION 5: PRACTICAL IMPLEMENTATION (9 STEPS + ILLUSTRATIVE MOCKUP)
+       ========================================================================= */
+    .impl-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 26px;
+      align-items: start;
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .step-btn {
+      width: 100%;
+      text-align: start;
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: rgba(9, 23, 49, 0.76);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.22s ease;
+    }
+
+    .step-btn:hover {
+      border-color: var(--border-cyan);
+      background: rgba(14, 34, 72, 0.88);
+    }
+
+    .step-btn.active {
+      background: linear-gradient(135deg, rgba(16, 46, 94, 0.96), rgba(10, 27, 60, 0.95));
+      border-color: var(--cyan);
+      box-shadow: 0 0 22px rgba(34, 211, 238, 0.2);
+    }
+
+    .step-index {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(34, 211, 238, 0.14);
+      border: 1px solid rgba(34, 211, 238, 0.42);
+      color: var(--cyan-bright);
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .step-btn.active .step-index {
+      background: var(--cyan);
+      color: #031020;
+    }
+
+    .step-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .mockup-panel {
+      position: sticky;
+      top: calc(var(--nav-height) + 22px);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      border-color: var(--border-cyan);
+    }
+
+    .mockup-disclaimer {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.34);
+      color: #fcd34d;
+      font-size: 0.8rem;
+      font-weight: 600;
+      align-self: flex-start;
+    }
+
+    .mockup-window {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.34);
+      background: #060f22;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .mockup-bar {
+      height: 38px;
+      padding: 0 14px;
+      background: #0d1d3a;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .win-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .mockup-url {
+      margin-left: 8px;
+      flex: 1;
+      background: rgba(4, 11, 24, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--cyan-bright);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mockup-body {
+      padding: 20px;
+      min-height: 230px;
+      font-family: var(--font-en);
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+    }
+
+    .mockup-explain h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--cyan-bright);
+      margin-bottom: 8px;
+    }
+
+    .mockup-explain p {
+      font-size: 0.96rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .mockup-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .mini-btn {
+      padding: 8px 16px;
+      border-radius: 9px;
+      border: 1px solid var(--border-cyan);
+      background: rgba(14, 34, 72, 0.82);
+      color: var(--text-primary);
+      font-size: 0.86rem;
+      font-weight: 700;
+      transition: background 0.2s ease;
+    }
+
+    .mini-btn:hover:not(:disabled) {
+      background: rgba(34, 211, 238, 0.2);
+    }
+
+    .mini-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* =========================================================================
+       9. SECTIONS 6, 7, 8, 9, 10, 11 (TECH, PROS, CONS, COMPARE, USE CASES, CONCLUSION)
+       ========================================================================= */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .tech-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tech-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .tech-role-badge {
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.16);
+      color: var(--blue-bright);
+    }
+
+    .tech-card h3 {
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .tech-card p {
+      font-size: 0.93rem;
+      color: var(--text-secondary);
+      line-height: 1.78;
+    }
+
+    .dual-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .limit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .limit-card {
+      padding: 24px;
+      border-color: rgba(251, 113, 133, 0.28);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .limit-card:hover {
+      border-color: rgba(251, 113, 133, 0.56);
+    }
+
+    /* Comparison Table */
+    .compare-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-cyan);
+      background: var(--surface-card);
+      box-shadow: var(--shadow-card);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+      text-align: start;
+    }
+
+    .compare-table th,
+    .compare-table td {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+      font-size: 0.96rem;
+    }
+
+    .compare-table thead th {
+      background: rgba(14, 38, 78, 0.92);
+      color: var(--text-primary);
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .compare-table thead th:nth-child(2) {
+      color: var(--cyan-bright);
+    }
+
+    .compare-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .compare-table tbody tr:hover td {
+      background: rgba(34, 211, 238, 0.05);
+    }
+
+    .compare-criteria {
+      font-weight: 800;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    /* Use Cases Grid */
+    .usecase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .usecase-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .usecase-en {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--cyan-bright);
+      letter-spacing: 0.3px;
+    }
+
+    /* Conclusion Banner */
+    .conclusion-box {
+      padding: 38px 36px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(145deg, rgba(13, 37, 80, 0.9), rgba(7, 19, 44, 0.94));
+      border: 1px solid var(--border-cyan);
+      box-shadow: var(--shadow-card), var(--shadow-glow);
+      text-align: center;
+    }
+
+    .conclusion-box h2 {
+      font-size: clamp(1.6rem, 2.8vw, 2.15rem);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .conclusion-box p {
+      max-width: 760px;
+      margin-inline: auto;
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.9;
+    }
+
+    /* =========================================================================
+       10. MOTION GRAPHICS FEATURE CARD & OFFICIAL SOURCES
+       ========================================================================= */
+    .motion-card {
+      padding: 40px 38px;
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at 18% 25%, rgba(34, 211, 238, 0.2), transparent 46%),
+        radial-gradient(circle at 85% 75%, rgba(168, 85, 247, 0.18), transparent 48%),
+        linear-gradient(140deg, rgba(11, 31, 68, 0.95), rgba(6, 15, 36, 0.97));
+      border: 1px solid rgba(34, 211, 238, 0.48);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.58), 0 0 48px rgba(34, 211, 238, 0.16);
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .motion-card h2 {
+      font-size: clamp(1.75rem, 3vw, 2.35rem);
+      font-weight: 900;
+      margin-bottom: 14px;
+      background: linear-gradient(90deg, #ffffff 0%, #67e8f9 65%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .motion-card p {
+      font-size: 1.06rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.85;
+    }
+
+    .motion-preview-box {
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(4, 11, 24, 0.84);
+      border: 1px solid var(--border-cyan);
+      text-align: center;
+    }
+
+    .sources-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .source-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .source-card h3 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .source-card p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .source-url {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--cyan-bright);
+      word-break: break-all;
+    }
+
+    /* =========================================================================
+       11. ACADEMIC FOOTER
+       ========================================================================= */
+    .site-footer {
+      margin-top: 40px;
+      padding-block: 44px 36px;
+      background: rgba(3, 9, 20, 0.92);
+      border-top: 1px solid var(--border-cyan);
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .footer-academic {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-course {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .footer-student {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--cyan-bright);
+    }
+
+    .footer-optional {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .footer-links a:hover {
+      color: var(--cyan-bright);
+    }
+
+    /* =========================================================================
+       12. RESPONSIVE BREAKPOINTS (DESKTOP, TABLET, MOBILE)
+       ========================================================================= */
+    @media (max-width: 1080px) {
+      .nav-links {
+        display: none;
+      }
+      .nav-toggle {
+        display: inline-flex;
+      }
+      .hero-grid,
+      .what-grid,
+      .impl-grid,
+      .motion-card {
+        grid-template-columns: 1fr;
+      }
+      .mockup-panel {
+        position: static;
+      }
+      .pipeline-nodes {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .intro-grid,
+      .feature-grid,
+      .sources-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .container {
+        padding-inline: 16px;
+      }
+      .section {
+        padding-block: 56px;
+      }
+      .nav-motion-btn span.hide-xs {
+        display: none;
+      }
+      .intro-grid,
+      .what-points,
+      .feature-grid,
+      .limit-grid,
+      .dual-grid,
+      .sources-grid,
+      .pipeline-nodes {
+        grid-template-columns: 1fr;
+      }
+      .pipe-detail-panel {
+        grid-template-columns: 1fr;
+      }
+      .motion-card,
+      .conclusion-box,
+      .pipeline-shell,
+      .arch-wrapper {
+        padding: 22px 18px;
+      }
+      .mobile-drawer ul {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .svg-dash, .svg-float, .svg-spin, .pulse-dot { animation: none !important; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
+  <!-- =========================================================================
+       TOP NAVIGATION BAR
+       ========================================================================= -->
+  <header class="site-nav">
+    <div class="container nav-inner">
+      <a href="#hero" class="nav-brand" aria-label="العودة إلى بداية الصفحة">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            <polyline points="10 13 12 11 14 13"/>
+            <line x1="12" y1="11" x2="12" y2="16"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title ltr" dir="ltr">GitHub Pages</span>
+          <span class="brand-sub">مقرر الحوسبة السحابية</span>
+        </div>
+      </a>
+
+      <nav aria-label="التنقل الرئيسي">
+        <ul class="nav-links" id="desktop-nav">
+          <li><a href="#intro">المقدمة</a></li>
+          <li><a href="#what-is">التعريف</a></li>
+          <li><a href="#how-it-works">آلية العمل</a></li>
+          <li><a href="#architecture">المعمارية</a></li>
+          <li><a href="#implementation">التطبيق العملي</a></li>
+          <li><a href="#technologies">التقنيات</a></li>
+          <li><a href="#comparison">المقارنة</a></li>
+          <li><a href="#sources">المصادر</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="github_pages_motion.html" class="nav-motion-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6,4 20,12 6,20"/></svg>
+          <span>فيلم الموشن <span class="hide-xs">جرافيك</span></span>
+        </a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-drawer" aria-label="فتح قائمة التنقل">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-drawer" id="mobile-drawer" aria-label="قائمة التنقل للجوال">
+    <ul>
+      <li><a href="#intro">1. المقدمة</a></li>
+      <li><a href="#what-is">2. ما هي الخدمة؟</a></li>
+      <li><a href="#how-it-works">3. آلية العمل</a></li>
+      <li><a href="#architecture">4. المعمارية</a></li>
+      <li><a href="#implementation">5. التطبيق العملي</a></li>
+      <li><a href="#technologies">6. التقنيات</a></li>
+      <li><a href="#advantages">7. المميزات</a></li>
+      <li><a href="#limitations">8. القيود</a></li>
+      <li><a href="#comparison">9. المقارنة</a></li>
+      <li><a href="#use-cases">10. حالات الاستخدام</a></li>
+      <li><a href="#conclusion">11. الخاتمة</a></li>
+      <li><a href="#sources">المصادر الرسمية</a></li>
+    </ul>
+    <a href="github_pages_motion.html" class="btn btn-primary" style="width:100%;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+      <span>شاهد فيلم الموشن جرافيك التفاعلي</span>
+    </a>
+  </div>
+
+  <main>
+    <!-- =======================================================================
+         HERO SECTION
+         ======================================================================= -->
+    <section class="hero" id="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="hero-badge">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span class="ltr" dir="ltr">Cloud-Based Static Website Hosting &amp; Deployment</span>
+          </div>
+          <h1 class="hero-title ltr" dir="ltr">GitHub Pages</h1>
+          <p class="hero-subtitle">من ملفات برمجية بسيطة إلى موقع متاح عبر الإنترنت.</p>
+          <p class="hero-desc">
+            اكتشف كيف تتيح <span class="ltr" dir="ltr">GitHub Pages</span> نشر واستضافة المواقع الثابتة مباشرة من مستودعات <span class="ltr" dir="ltr">GitHub</span>، دون الحاجة إلى إدارة خادم استضافة تقليدي.
+          </p>
+          <div class="hero-cta-group">
+            <a href="github_pages_motion.html" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6,4 20,12 6,20"/></svg>
+              <span>شاهد فيلم الموشن جرافيك</span>
+            </a>
+            <a href="#intro" class="btn btn-glass">
+              <span>ابدأ الرحلة التعليمية</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+          </div>
+          <div class="hero-pillars">
+            <div class="hero-pillar"><strong>الجانب النظري:</strong> مفاهيم الحوسبة السحابية</div>
+            <div class="hero-pillar"><strong>الجانب التقني:</strong> المعمارية وتدفق البيانات</div>
+            <div class="hero-pillar"><strong>الجانب العملي:</strong> 9 خطوات تطبيقية واضحة</div>
+          </div>
+        </div>
+
+        <!-- Animated Cloud Journey Illustration -->
+        <div class="hero-visual" id="hero-visual">
+          <div class="hero-visual-top">
+            <div class="hero-visual-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span>رحلة انتقال ملفات الموقع إلى الإنترنت</span>
+            </div>
+            <button type="button" class="hero-anim-toggle" id="hero-anim-toggle" aria-pressed="false">إيقاف الحركة</button>
+          </div>
+
+          <svg viewBox="0 0 540 310" width="540" height="310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="رسم متحرك يوضح انتقال ملفات HTML وCSS وJavaScript من جهاز المطور عبر GitHub إلى الإنترنت">
+            <defs>
+              <linearGradient id="hGrad1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#22d3ee"/>
+                <stop offset="100%" stop-color="#3b82f6"/>
+              </linearGradient>
+              <linearGradient id="hGrad2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#10b981"/>
+                <stop offset="100%" stop-color="#22d3ee"/>
+              </linearGradient>
+              <filter id="hGlow" x="-25%" y="-25%" width="150%" height="150%">
+                <feGaussianBlur stdDeviation="5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <!-- Connecting Paths -->
+            <path id="hero-path-1" d="M126 112 C170 112, 178 112, 214 112" fill="none" stroke="#38bdf8" stroke-width="2.6" class="svg-dash"/>
+            <path id="hero-path-2" d="M326 112 C368 112, 376 112, 412 112" fill="none" stroke="#10b981" stroke-width="2.6" class="svg-dash"/>
+            <path d="M270 162 L270 212" fill="none" stroke="#818cf8" stroke-width="2.4" class="svg-dash"/>
+            <path d="M342 250 C410 250, 466 232, 466 172" fill="none" stroke="#22d3ee" stroke-width="2.4" class="svg-dash"/>
+
+            <!-- Animated Data Packets -->
+            <circle id="h-pkt-1" r="5.5" fill="#67e8f9" filter="url(#hGlow)" cx="140" cy="112"/>
+            <circle id="h-pkt-2" r="5.5" fill="#6ee7b7" filter="url(#hGlow)" cx="340" cy="112"/>
+
+            <!-- Node 1: Local Code Files -->
+            <g transform="translate(18, 52)">
+              <rect width="108" height="120" rx="14" fill="#091a38" stroke="#38bdf8" stroke-width="1.8"/>
+              <text x="54" y="25" text-anchor="middle" fill="#67e8f9" font-size="11.5" font-weight="700" font-family="monospace">Local Files</text>
+              <g class="svg-float">
+                <rect x="16" y="38" width="76" height="20" rx="5" fill="rgba(34,211,238,0.16)" stroke="#22d3ee" stroke-width="1"/>
+                <text x="54" y="52" text-anchor="middle" fill="#e0f2fe" font-size="10.5" font-family="monospace">index.html</text>
+                <rect x="16" y="64" width="76" height="20" rx="5" fill="rgba(59,130,246,0.16)" stroke="#60a5fa" stroke-width="1"/>
+                <text x="54" y="78" text-anchor="middle" fill="#dbeafe" font-size="10.5" font-family="monospace">style.css</text>
+                <rect x="16" y="90" width="76" height="20" rx="5" fill="rgba(168,85,247,0.18)" stroke="#a855f7" stroke-width="1"/>
+                <text x="54" y="104" text-anchor="middle" fill="#f3e8ff" font-size="10.5" font-family="monospace">script.js</text>
+              </g>
+            </g>
+
+            <!-- Node 2: GitHub Repository -->
+            <g transform="translate(214, 58)">
+              <rect width="112" height="104" rx="16" fill="#0d2248" stroke="#60a5fa" stroke-width="2"/>
+              <circle cx="56" cy="40" r="18" fill="rgba(59,130,246,0.2)" stroke="#60a5fa" stroke-width="1.6"/>
+              <!-- Branch Icon -->
+              <circle cx="51" cy="34" r="3" fill="#67e8f9"/>
+              <circle cx="62" cy="34" r="3" fill="#a855f7"/>
+              <circle cx="51" cy="47" r="3" fill="#10b981"/>
+              <line x1="51" y1="37" x2="51" y2="44" stroke="#67e8f9" stroke-width="1.6"/>
+              <path d="M62 37 C62 42 54 42 51 47" fill="none" stroke="#a855f7" stroke-width="1.6"/>
+              <text x="56" y="77" text-anchor="middle" fill="#f8fafc" font-size="11.5" font-weight="800" font-family="monospace">GitHub Repo</text>
+              <text x="56" y="94" text-anchor="middle" fill="#94a3b8" font-size="10.5">branch: main</text>
+            </g>
+
+            <!-- Node 3: Build & Cloud Hosting -->
+            <g transform="translate(198, 212)">
+              <rect width="144" height="76" rx="14" fill="#111d4a" stroke="#818cf8" stroke-width="1.8"/>
+              <g transform="translate(28, 38)">
+                <g class="svg-spin">
+                  <circle r="13" fill="none" stroke="#a855f7" stroke-width="3.6" stroke-dasharray="5 4"/>
+                  <circle r="5.5" fill="#091a38" stroke="#22d3ee" stroke-width="1.5"/>
+                </g>
+              </g>
+              <text x="90" y="34" text-anchor="middle" fill="#e0e7ff" font-size="11.5" font-weight="800" font-family="monospace">GitHub Pages</text>
+              <text x="90" y="54" text-anchor="middle" fill="#a5b4fc" font-size="10.5">Build &amp; HTTPS</text>
+            </g>
+
+            <!-- Node 4: Live Published Website -->
+            <g transform="translate(412, 52)">
+              <rect width="112" height="120" rx="14" fill="#07273b" stroke="url(#hGrad2)" stroke-width="2.2" filter="url(#hGlow)"/>
+              <rect x="0" y="0" width="112" height="24" rx="14" fill="rgba(16,185,129,0.2)"/>
+              <text x="56" y="16" text-anchor="middle" fill="#6ee7b7" font-size="9.5" font-family="monospace">🔒 HTTPS LIVE</text>
+              <rect x="14" y="34" width="84" height="24" rx="5" fill="rgba(34,211,238,0.2)" stroke="#22d3ee" stroke-width="1"/>
+              <rect x="14" y="66" width="38" height="32" rx="5" fill="rgba(59,130,246,0.2)"/>
+              <rect x="60" y="66" width="38" height="32" rx="5" fill="rgba(16,185,129,0.2)"/>
+              <text x="56" y="112" text-anchor="middle" fill="#a7f3d0" font-size="10.5" font-weight="700">متاح للعالم</text>
+            </g>
+          </svg>
+
+          <div class="hero-visual-caption">
+            <span>التدفق: ملفات ثابتة ← مستودع <span class="ltr" dir="ltr">GitHub</span> ← بناء ونشر سحابي ← رابط <span class="ltr" dir="ltr">HTTPS</span></span>
+            <span class="code-tag">Static Cloud</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 1: INTRODUCTION
+         ======================================================================= -->
+    <section class="section" id="intro">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم الأول • <span class="ltr" dir="ltr">Introduction</span></span>
+          <h2 class="section-title">الحوسبة السحابية وعلاقتها باستضافة المواقع</h2>
+          <p class="section-lead">
+            تمثّل الحوسبة السحابية (<span class="ltr" dir="ltr">Cloud Computing</span>) نموذجاً لتوفير موارد الحوسبة — مثل الخوادم والتخزين والشبكات ومنصات النشر — عبر الإنترنت عند الطلب، مما غيّر جذرياً طريقة استضافة المواقع وإتاحتها للمستخدمين.
+          </p>
+        </div>
+
+        <div class="intro-grid">
+          <article class="glass-card info-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+            </div>
+            <h3>مفهوم الحوسبة السحابية</h3>
+            <p>
+              تتيح الحوسبة السحابية للمطورين والمؤسسات الاستفادة من بنية تحتية جاهزة ومُدارة سحابياً بدلاً من شراء أجهزة خوادم فعلية أو الانشغال بإعدادها وصيانتها وتحديثها المستمر.
+            </p>
+          </article>
+
+          <article class="glass-card info-card reveal">
+            <div class="icon-box blue" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/></svg>
+            </div>
+            <h3>التحول في استضافة المواقع</h3>
+            <p>
+              انتقلت استضافة الويب من الخوادم التقليدية التي تتطلب تهيئة يدوية لنظام التشغيل وخادم الويب وشهادات الأمان، إلى خدمات سحابية مؤتمتة تختصر الطريق من كتابة الشيفرة إلى النشر العام.
+            </p>
+          </article>
+
+          <article class="glass-card info-card reveal">
+            <div class="icon-box emerald" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <h3>استضافة المواقع الثابتة سحابياً</h3>
+            <p>
+              تُعدّ استضافة المواقع الثابتة نموذجاً عملياً مباشراً للحوسبة السحابية؛ إذ تركز المنصة السحابية على تسليم ملفات الواجهة (<span class="ltr" dir="ltr">HTML, CSS, JS</span>) بسرعة وأمان عبر الشبكة دون إدارة خادم تطبيقات.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 2: WHAT IS GITHUB PAGES?
+         ======================================================================= -->
+    <section class="section" id="what-is">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم الثاني • <span class="ltr" dir="ltr">What is GitHub Pages?</span></span>
+          <h2 class="section-title">ما هي خدمة <span class="ltr" dir="ltr">GitHub Pages</span>؟</h2>
+          <p class="section-lead">
+            خدمة استضافة مواقع ثابتة (<span class="ltr" dir="ltr">Static Site Hosting</span>) تقدمها منصة <span class="ltr" dir="ltr">GitHub</span> لتحويل ملفات المشروع المخزّنة في مستودعك مباشرة إلى موقع ويب منشور ومتاح عبر الإنترنت.
+          </p>
+        </div>
+
+        <div class="what-grid">
+          <div class="glass-card what-main reveal">
+            <div>
+              <h3 style="font-size:1.25rem; font-weight:800; margin-bottom:10px; color:var(--cyan-bright);">طبيعة الخدمة وكيف تختلف عن الخوادم التقليدية</h3>
+              <p style="color:var(--text-secondary); line-height:1.85;">
+                تقوم <span class="ltr" dir="ltr">GitHub Pages</span> بقراءة ملفات <span class="ltr" dir="ltr">HTML</span> و<span class="ltr" dir="ltr">CSS</span> و<span class="ltr" dir="ltr">JavaScript</span> (أو مخرجات أدوات البناء الثابتة مثل <span class="ltr" dir="ltr">Jekyll</span> أو مسارات <span class="ltr" dir="ltr">GitHub Actions</span>) من مستودع المشروع، ثم تنشرها تلقائياً على رابط ويب آمن يعمل ببروتوكول <span class="ltr" dir="ltr">HTTPS</span>. تُعالج كل شيفرة التفاعل داخل متصفح الزائر مباشرة دون الحاجة إلى تشغيل خادم خلفي.
+              </p>
+            </div>
+
+            <div class="what-points">
+              <div class="what-point">
+                <strong>نشر مباشر من المستودع</strong>
+                <span>يرتبط الموقع مباشرة بملفات الشيفرة؛ فأي تحديث محفوظ في الفرع المحدد ينعكس على الموقع تلقائياً.</span>
+              </div>
+              <div class="what-point">
+                <strong>مصممة للمحتوى الثابت</strong>
+                <span>مثالية للصفحات التعريفية والتوثيق والمواقع التعليمية التي لا تحتاج معالجة خادمية.</span>
+              </div>
+              <div class="what-point">
+                <strong>تشفير HTTPS مدمج</strong>
+                <span>تدعم تفعيل الاتصال المشفّر للنطاق الافتراضي والنطاقات المخصصة لتعزيز أمان التصفح.</span>
+              </div>
+              <div class="what-point">
+                <strong>دون إعداد بنية تحتية</strong>
+                <span>لا يحتاج الطالب أو المطوّر إلى تهيئة خادم ويب أو إدارة نظام تشغيل أو لوحات استضافة معقدة.</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="glass-card what-side reveal" aria-label="أنواع مواقع GitHub Pages">
+            <h3 style="font-size:1.15rem; font-weight:800; color:var(--text-primary);">أنواع المواقع في <span class="ltr" dir="ltr">GitHub Pages</span></h3>
+            <div class="site-type-box">
+              <h4>
+                <span>موقع المستخدم أو المؤسسة</span>
+                <span class="code-tag">User / Org</span>
+              </h4>
+              <p>يُنشأ عبر مستودع يحمل اسم الحساب متبوعاً بـ <span class="code-tag">.github.io</span> ليكون الموقع الرئيسي للحساب.</p>
+              <span class="code-tag">https://username.github.io</span>
+            </div>
+            <div class="site-type-box">
+              <h4>
+                <span>موقع المشروع</span>
+                <span class="code-tag">Project Site</span>
+              </h4>
+              <p>يُفعّل لأي مستودع مشروع مستقل لعرض توثيقه أو واجهته التفاعلية تحت مسار فرعي باسم المستودع.</p>
+              <span class="code-tag">https://username.github.io/repo-name</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 3: HOW IT WORKS (INTERACTIVE PIPELINE)
+         ======================================================================= -->
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم الثالث • <span class="ltr" dir="ltr">How It Works</span></span>
+          <h2 class="section-title">آلية عمل <span class="ltr" dir="ltr">GitHub Pages</span> خطوة بخطوة</h2>
+          <p class="section-lead">
+            يتتبع المخطط التفاعلي التالي المسار الكامل من كتابة الشيفرة على جهاز المطوّر حتى عرضها في متصفح الزائر. انقر على أي مرحلة لاستعراض تفاصيلها التقنية.
+          </p>
+        </div>
+
+        <div class="glass-card pipeline-shell reveal">
+          <div class="pipeline-controls">
+            <span class="pipeline-hint">المسار المتسلسل: <span class="ltr" dir="ltr">Developer → Repository → Build &amp; Deployment → Published Website → Visitor</span></span>
+            <button type="button" class="mini-btn" id="pipe-auto-btn">تشغيل الجولة التلقائية</button>
+          </div>
+
+          <div class="pipeline-nodes" role="tablist" aria-label="مراحل آلية عمل GitHub Pages">
+            <button type="button" class="pipe-node active" role="tab" aria-selected="true" data-pipe="0">
+              <span class="pipe-step-num">01</span>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <span class="pipe-en ltr" dir="ltr">Developer</span>
+              <span class="pipe-ar">المطوّر</span>
+            </button>
+
+            <button type="button" class="pipe-node" role="tab" aria-selected="false" data-pipe="1">
+              <span class="pipe-step-num">02</span>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+              <span class="pipe-en ltr" dir="ltr">Repository</span>
+              <span class="pipe-ar">المستودع</span>
+            </button>
+
+            <button type="button" class="pipe-node" role="tab" aria-selected="false" data-pipe="2">
+              <span class="pipe-step-num">03</span>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span class="pipe-en ltr" dir="ltr">Build &amp; Deployment</span>
+              <span class="pipe-ar">البناء والنشر</span>
+            </button>
+
+            <button type="button" class="pipe-node" role="tab" aria-selected="false" data-pipe="3">
+              <span class="pipe-step-num">04</span>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+              <span class="pipe-en ltr" dir="ltr">Published Website</span>
+              <span class="pipe-ar">الموقع المنشور</span>
+            </button>
+
+            <button type="button" class="pipe-node" role="tab" aria-selected="false" data-pipe="4">
+              <span class="pipe-step-num">05</span>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              <span class="pipe-en ltr" dir="ltr">Visitor</span>
+              <span class="pipe-ar">الزائر</span>
+            </button>
+          </div>
+
+          <div class="pipe-detail-panel" aria-live="polite">
+            <div>
+              <div class="pipe-detail-title" id="pipe-detail-title">1. المطوّر (Developer)</div>
+              <p class="pipe-detail-text" id="pipe-detail-text">
+                يقوم المطوّر بكتابة وتجهيز ملفات الموقع الثابتة محلياً (مثل index.html وملفات CSS وJavaScript والصور)، ثم يختبرها على جهازه قبل رفعها إلى مستودع GitHub.
+              </p>
+            </div>
+            <div class="pipe-detail-meta">
+              <strong>المخرج الرئيسي للمرحلة</strong>
+              <span id="pipe-detail-output">ملفات واجهة أمامية منظمة وجاهزة للرفع عبر Git أو واجهة الويب.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 4: ARCHITECTURE (INTERACTIVE 8-NODE SYSTEM DIAGRAM)
+         ======================================================================= -->
+    <section class="section" id="architecture">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم الرابع • <span class="ltr" dir="ltr">Architecture</span></span>
+          <h2 class="section-title">المعمارية التقنية وتدفق البيانات</h2>
+          <p class="section-lead">
+            يوضح المخطط المعماري التالي العلاقات الدقيقة بين جميع مكونات منظومة النشر الثابت في <span class="ltr" dir="ltr">GitHub Pages</span>. يمكنك تصفية مراحل التدفق أو النقر على أي مكون لاستعراض وظيفته الدقيقة.
+          </p>
+        </div>
+
+        <div class="glass-card arch-wrapper reveal">
+          <div class="arch-toolbar">
+            <div class="arch-filters" role="group" aria-label="تمييز مراحل تدفق البيانات">
+              <button type="button" class="arch-filter-btn active" data-phase="all">التدفق الكامل (8 مكونات)</button>
+              <button type="button" class="arch-filter-btn" data-phase="dev">1. مرحلة التطوير والرفع</button>
+              <button type="button" class="arch-filter-btn" data-phase="cloud">2. مرحلة النشر السحابي</button>
+              <button type="button" class="arch-filter-btn" data-phase="client">3. مرحلة وصول الزائر</button>
+            </div>
+            <span style="font-size:0.84rem; color:var(--text-muted);">انقر على أي مربع داخل المخطط لقراءة تفاصيله</span>
+          </div>
+
+          <div class="arch-canvas">
+            <svg class="arch-svg" viewBox="0 0 1060 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="المخطط المعماري لتدفق البيانات في GitHub Pages عبر 8 مكونات">
+              <defs>
+                <marker id="arrowCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#22d3ee"/>
+                </marker>
+                <marker id="arrowPurple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7"/>
+                </marker>
+                <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981"/>
+                </marker>
+              </defs>
+
+              <!-- Layer Zone Backgrounds -->
+              <rect x="14" y="14" width="496" height="154" rx="14" fill="rgba(59,130,246,0.06)" stroke="rgba(59,130,246,0.22)" stroke-dasharray="6 6"/>
+              <text x="494" y="34" text-anchor="end" fill="#60a5fa" font-size="11.5" font-weight="700">بيئة التطوير والمستودع</text>
+
+              <rect x="530" y="14" width="516" height="154" rx="14" fill="rgba(168,85,247,0.06)" stroke="rgba(168,85,247,0.22)" stroke-dasharray="6 6"/>
+              <text x="1030" y="34" text-anchor="end" fill="#c084fc" font-size="11.5" font-weight="700">البنية السحابية لـ GitHub Pages</text>
+
+              <rect x="14" y="192" width="1032" height="154" rx="14" fill="rgba(16,185,129,0.05)" stroke="rgba(16,185,129,0.2)" stroke-dasharray="6 6"/>
+              <text x="1030" y="212" text-anchor="end" fill="#6ee7b7" font-size="11.5" font-weight="700">طبقة الإتاحة والوصول عبر الإنترنت</text>
+
+              <!-- Edges (Arrows) -->
+              <!-- 1. Developer -> Local Project -->
+              <line class="arch-edge" data-edge-phase="dev" x1="210" y1="100" x2="274" y2="100" stroke="#22d3ee" stroke-width="2.4" marker-end="url(#arrowCyan)"/>
+              <!-- 2. Local Project -> GitHub Repository -->
+              <line class="arch-edge" data-edge-phase="dev" x1="474" y1="100" x2="554" y2="100" stroke="#22d3ee" stroke-width="2.4" marker-end="url(#arrowCyan)"/>
+              <text x="514" y="90" text-anchor="middle" fill="#67e8f9" font-size="10" font-family="monospace">git push</text>
+              <!-- 3. GitHub Repository -> Source Branch -->
+              <line class="arch-edge" data-edge-phase="cloud" x1="756" y1="100" x2="824" y2="100" stroke="#a855f7" stroke-width="2.4" marker-end="url(#arrowPurple)"/>
+              <!-- 4. Source Branch -> GitHub Pages (down) -->
+              <path class="arch-edge" data-edge-phase="cloud" d="M926 144 L926 226" fill="none" stroke="#a855f7" stroke-width="2.4" marker-end="url(#arrowPurple)"/>
+              <!-- 5. GitHub Pages -> Deployment Process -->
+              <line class="arch-edge" data-edge-phase="cloud" x1="826" y1="274" x2="758" y2="274" stroke="#a855f7" stroke-width="2.4" marker-end="url(#arrowPurple)"/>
+              <!-- 6. Deployment Process -> Website URL -->
+              <line class="arch-edge" data-edge-phase="client" x1="556" y1="274" x2="476" y2="274" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowGreen)"/>
+              <!-- 7. Website URL -> Visitor Browser -->
+              <line class="arch-edge" data-edge-phase="client" x1="276" y1="274" x2="212" y2="274" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowGreen)"/>
+              <text x="244" y="263" text-anchor="middle" fill="#6ee7b7" font-size="10" font-family="monospace">HTTPS</text>
+
+              <!-- NODE 1: Developer -->
+              <g class="arch-node highlighted" data-node="developer" data-node-phase="dev" tabindex="0" role="button" aria-label="Developer - المطوّر" transform="translate(30, 56)">
+                <rect width="180" height="88" rx="12" fill="#0b2046" stroke="#22d3ee" stroke-width="2"/>
+                <text x="90" y="36" text-anchor="middle" fill="#67e8f9" font-size="13.5" font-weight="800" font-family="monospace">1. Developer</text>
+                <text x="90" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">المطوّر</text>
+              </g>
+
+              <!-- NODE 2: Local Project -->
+              <g class="arch-node" data-node="local" data-node-phase="dev" tabindex="0" role="button" aria-label="Local Project - المشروع المحلي" transform="translate(278, 56)">
+                <rect width="196" height="88" rx="12" fill="#0b2046" stroke="#38bdf8" stroke-width="2"/>
+                <text x="98" y="36" text-anchor="middle" fill="#7dd3fc" font-size="13.5" font-weight="800" font-family="monospace">2. Local Project</text>
+                <text x="98" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">ملفات المشروع المحلية</text>
+              </g>
+
+              <!-- NODE 3: GitHub Repository -->
+              <g class="arch-node" data-node="repo" data-node-phase="dev cloud" tabindex="0" role="button" aria-label="GitHub Repository - مستودع GitHub" transform="translate(558, 56)">
+                <rect width="198" height="88" rx="12" fill="#0f2352" stroke="#60a5fa" stroke-width="2"/>
+                <text x="99" y="36" text-anchor="middle" fill="#93c5fd" font-size="13" font-weight="800" font-family="monospace">3. GitHub Repository</text>
+                <text x="99" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">مستودع GitHub السحابي</text>
+              </g>
+
+              <!-- NODE 4: Source Branch -->
+              <g class="arch-node" data-node="branch" data-node-phase="cloud" tabindex="0" role="button" aria-label="Source Branch - فرع المصدر" transform="translate(828, 56)">
+                <rect width="196" height="88" rx="12" fill="#181f54" stroke="#818cf8" stroke-width="2"/>
+                <text x="98" y="36" text-anchor="middle" fill="#c7d2fe" font-size="13.5" font-weight="800" font-family="monospace">4. Source Branch</text>
+                <text x="98" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">فرع المصدر (مثل main)</text>
+              </g>
+
+              <!-- NODE 5: GitHub Pages -->
+              <g class="arch-node" data-node="pages" data-node-phase="cloud" tabindex="0" role="button" aria-label="GitHub Pages - خدمة GitHub Pages" transform="translate(828, 230)">
+                <rect width="196" height="88" rx="12" fill="#1e1952" stroke="#a855f7" stroke-width="2"/>
+                <text x="98" y="36" text-anchor="middle" fill="#d8b4fe" font-size="13.5" font-weight="800" font-family="monospace">5. GitHub Pages</text>
+                <text x="98" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">محرك خدمة النشر</text>
+              </g>
+
+              <!-- NODE 6: Deployment Process -->
+              <g class="arch-node" data-node="deploy" data-node-phase="cloud client" tabindex="0" role="button" aria-label="Deployment Process - عملية النشر" transform="translate(558, 230)">
+                <rect width="198" height="88" rx="12" fill="#13254c" stroke="#c084fc" stroke-width="2"/>
+                <text x="99" y="36" text-anchor="middle" fill="#e9d5ff" font-size="13" font-weight="800" font-family="monospace">6. Deployment Process</text>
+                <text x="99" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">البناء والتجهيز والتوزيع</text>
+              </g>
+
+              <!-- NODE 7: Website URL -->
+              <g class="arch-node" data-node="url" data-node-phase="client" tabindex="0" role="button" aria-label="Website URL - رابط الموقع" transform="translate(278, 230)">
+                <rect width="196" height="88" rx="12" fill="#092942" stroke="#10b981" stroke-width="2"/>
+                <text x="98" y="36" text-anchor="middle" fill="#6ee7b7" font-size="13.5" font-weight="800" font-family="monospace">7. Website URL</text>
+                <text x="98" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">عنوان الموقع العام (HTTPS)</text>
+              </g>
+
+              <!-- NODE 8: Visitor Browser -->
+              <g class="arch-node" data-node="browser" data-node-phase="client" tabindex="0" role="button" aria-label="Visitor Browser - متصفح الزائر" transform="translate(30, 230)">
+                <rect width="180" height="88" rx="12" fill="#072a42" stroke="#22d3ee" stroke-width="2"/>
+                <text x="90" y="36" text-anchor="middle" fill="#67e8f9" font-size="13" font-weight="800" font-family="monospace">8. Visitor Browser</text>
+                <text x="90" y="62" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">متصفح المستخدم</text>
+              </g>
+            </svg>
+          </div>
+
+          <div class="arch-inspector" aria-live="polite">
+            <div class="arch-inspector-main">
+              <span class="arch-inspector-tag" id="arch-insp-phase">مرحلة التطوير والرفع</span>
+              <h3 id="arch-insp-title">Developer — المطوّر</h3>
+              <p id="arch-insp-desc">نقطة انطلاق العملية؛ ينشئ المطوّر صفحات الموقع الثابتة محلياً، ويتحقق من سلامة الروابط والتصميم، ثم يدفع التغييرات إلى المستودع السحابي.</p>
+            </div>
+            <div class="code-tag" id="arch-insp-io">Input: Code &amp; Assets → Local Project</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 5: PRACTICAL IMPLEMENTATION (9 STEPS + ILLUSTRATIVE UI MOCKUPS)
+         ======================================================================= -->
+    <section class="section" id="implementation">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم الخامس • <span class="ltr" dir="ltr">Practical Implementation</span></span>
+          <h2 class="section-title">التطبيق العملي: 9 خطوات لنشر موقعك على <span class="ltr" dir="ltr">GitHub Pages</span></h2>
+          <p class="section-lead">
+            اتبع التسلسل العملي التالي لتجربة نشر موقع ثابت حقيقي. اختر أي خطوة من القائمة لاستعراض الشرح والواجهة التمثيلية المقابلة لها.
+          </p>
+        </div>
+
+        <div class="impl-grid reveal">
+          <div class="steps-list" role="tablist" aria-label="خطوات التطبيق العملي التسع">
+            <button type="button" class="step-btn active" role="tab" aria-selected="true" data-step="0">
+              <span class="step-index">1</span>
+              <span class="step-label">إنشاء حساب <span class="ltr" dir="ltr">GitHub</span></span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="1">
+              <span class="step-index">2</span>
+              <span class="step-label">إنشاء <span class="ltr" dir="ltr">Repository</span> جديد</span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="2">
+              <span class="step-index">3</span>
+              <span class="step-label">إضافة ملف <span class="ltr" dir="ltr">index.html</span></span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="3">
+              <span class="step-index">4</span>
+              <span class="step-label">رفع ملفات الموقع إلى المستودع</span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="4">
+              <span class="step-index">5</span>
+              <span class="step-label">فتح تبويب <span class="ltr" dir="ltr">Settings</span></span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="5">
+              <span class="step-index">6</span>
+              <span class="step-label">اختيار قسم <span class="ltr" dir="ltr">Pages</span></span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="6">
+              <span class="step-index">7</span>
+              <span class="step-label">تحديد مصدر النشر (<span class="ltr" dir="ltr">Source / Branch</span>)</span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="7">
+              <span class="step-index">8</span>
+              <span class="step-label">انتظار اكتمال <span class="ltr" dir="ltr">Deployment</span></span>
+            </button>
+            <button type="button" class="step-btn" role="tab" aria-selected="false" data-step="8">
+              <span class="step-index">9</span>
+              <span class="step-label">فتح رابط الموقع المنشور</span>
+            </button>
+          </div>
+
+          <div class="glass-card mockup-panel" aria-live="polite">
+            <div class="mockup-disclaimer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>رسم واجهة تمثيلي توضيحي وليس لقطة شاشة حقيقية من واجهة GitHub</span>
+            </div>
+
+            <div class="mockup-window">
+              <div class="mockup-bar">
+                <span class="win-dot" style="background:#fb7185;"></span>
+                <span class="win-dot" style="background:#f59e0b;"></span>
+                <span class="win-dot" style="background:#10b981;"></span>
+                <div class="mockup-url" id="mockup-url">https://github.com/signup</div>
+              </div>
+              <div class="mockup-body" id="mockup-body"></div>
+            </div>
+
+            <div class="mockup-explain">
+              <h3 id="mockup-title">الخطوة 1: إنشاء حساب GitHub</h3>
+              <p id="mockup-desc"></p>
+            </div>
+
+            <div class="mockup-nav">
+              <button type="button" class="mini-btn" id="step-prev" disabled>الخطوة السابقة</button>
+              <span style="font-family:var(--font-mono); font-size:0.86rem; color:var(--cyan-bright);" id="step-counter">1 / 9</span>
+              <button type="button" class="mini-btn" id="step-next">الخطوة التالية</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 6: TECHNOLOGIES
+         ======================================================================= -->
+    <section class="section" id="technologies">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم السادس • <span class="ltr" dir="ltr">Technologies</span></span>
+          <h2 class="section-title">التقنيات الأساسية المشاركة في المنظومة</h2>
+          <p class="section-lead">
+            تتكامل سبع تقنيات رئيسية لتقديم موقع ثابت سريع وآمن من مرحلة البناء المحلي وحتى العرض في متصفح المستخدم.
+          </p>
+        </div>
+
+        <div class="tech-grid">
+          <article class="glass-card tech-card reveal">
+            <div class="tech-head">
+              <div class="icon-box" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              <span class="tech-role-badge">الهيكلة</span>
+            </div>
+            <h3 class="ltr" dir="ltr">HTML</h3>
+            <p>تحدد البنية الدلالية لصفحات الموقع الثابت ومحتواها النصي والروابط والعناصر، وتُعدّ <span class="code-tag">index.html</span> نقطة الدخول الافتراضية للموقع.</p>
+          </article>
+
+          <article class="glass-card tech-card reveal">
+            <div class="tech-head">
+              <div class="icon-box blue" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              </div>
+              <span class="tech-role-badge">التنسيق البصري</span>
+            </div>
+            <h3 class="ltr" dir="ltr">CSS</h3>
+            <p>تتحكم في الهوية البصرية والألوان والتخطيط المتجاوب واتجاه <span class="ltr" dir="ltr">RTL</span> والانتقالات، مما يجعل الموقع قابلاً للعرض بسلاسة على الهواتف والحواسيب.</p>
+          </article>
+
+          <article class="glass-card tech-card reveal">
+            <div class="tech-head">
+              <div class="icon-box purple" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <span class="tech-role-badge">التفاعل الأمامي</span>
+            </div>
+            <h3 class="ltr" dir="ltr">JavaScript</h3>
+            <p>تضيف التفاعل المباشر داخل متصفح الزائر (مثل التنقل بين المخططات والخطوات والرسوم المتحركة) دون الحاجة إلى معالجة على خادم خلفي.</p>
+          </article>
+
+          <article class="glass-card tech-card reveal">
+            <div class="tech-head">
+              <div class="icon-box" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+              </div>
+              <span class="tech-role-badge">إدارة الإصدارات</span>
+            </div>
+            <h3 class="ltr" dir="ltr">Git</h3>
+            <p>نظام إدارة الإصدارات الموزّع الذي يتتبع تعديلات ملفات المشروع محلياً، ويتيح العودة إلى النسخ السابقة ودفع التحديثات بدقة وأمان.</p>
+          </article>
+
+          <article class="glass-card tech-card reveal">
+            <div class="tech-head">
+              <div class="icon-box blue" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <span class="tech-role-badge">الاستضافة البرمجية</span>
+            </div>
+            <h3 class="ltr" dir="ltr">GitHub</h3>
+            <p>المنصة السحابية التي تستضيف مستودعات <span class="ltr" dir="ltr">Git</span> وتنظم الفروع وتوفر واجهة الإعدادات والتعاون، وتشكّل المصدر المباشر لملفات الموقع.</p>
+          </article>
+
+          <article class="glass-card tech-card reveal">
+            <div class="tech-head">
+              <div class="icon-box emerald" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <span class="tech-role-badge">الأمان والتشفير</span>
+            </div>
+            <h3 class="ltr" dir="ltr">HTTPS</h3>
+            <p>بروتوكول الاتصال الآمن الذي يشفّر البيانات المتبادلة بين خوادم <span class="ltr" dir="ltr">GitHub Pages</span> ومتصفح الزائر لضمان سلامة المحتوى وخصوصية الاتصال.</p>
+          </article>
+
+          <article class="glass-card tech-card reveal">
+            <div class="tech-head">
+              <div class="icon-box purple" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <span class="tech-role-badge">النشر المؤتمت</span>
+            </div>
+            <h3 class="ltr" dir="ltr">GitHub Pages Deployment</h3>
+            <p>الآلية السحابية التي تلتقط تحديثات الفرع المصدري أو مخرجات <span class="ltr" dir="ltr">GitHub Actions</span>، وتجهّز الملفات الثابتة وتنشرها على الرابط العام تلقائياً.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 7: ADVANTAGES
+         ======================================================================= -->
+    <section class="section" id="advantages">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم السابع • <span class="ltr" dir="ltr">Advantages</span></span>
+          <h2 class="section-title">المميزات الرئيسية لخدمة <span class="ltr" dir="ltr">GitHub Pages</span></h2>
+          <p class="section-lead">
+            تجمع الخدمة بين بساطة الإعداد والاعتماد على بنية سحابية موثوقة تخدم الطلاب والمطورين وفرق التوثيق.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="glass-card info-card reveal">
+            <div class="icon-box emerald" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h3>سهولة الاستخدام</h3>
+            <p>يمكن تفعيل النشر في خطوات قليلة مباشرة من إعدادات المستودع دون الحاجة إلى خبرة في إدارة الخوادم أو تهيئة لوحات التحكم التقليدية.</p>
+          </article>
+
+          <article class="glass-card info-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+            </div>
+            <h3>استضافة المواقع الثابتة</h3>
+            <p>توفر بيئة مستقرة وسريعة مخصصة لتقديم ملفات <span class="ltr" dir="ltr">HTML</span> و<span class="ltr" dir="ltr">CSS</span> و<span class="ltr" dir="ltr">JavaScript</span> والأصول الثابتة بكفاءة عالية.</p>
+          </article>
+
+          <article class="glass-card info-card reveal">
+            <div class="icon-box blue" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+            </div>
+            <h3>التكامل مع <span class="ltr" dir="ltr">GitHub</span></h3>
+            <p>تندمج الخدمة عضوياً مع مستودع الشيفرة والفروع وسجل التعديلات، مما يوحد مكان التطوير ومكان النشر في منصة واحدة.</p>
+          </article>
+
+          <article class="glass-card info-card reveal">
+            <div class="icon-box emerald" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <h3>دعم <span class="ltr" dir="ltr">HTTPS</span></h3>
+            <p>تتيح فرض التشفير عبر <span class="ltr" dir="ltr">HTTPS</span> لحماية اتصال الزوار بالصفحات المنشورة وتعزيز موثوقية الموقع في المتصفحات الحديثة.</p>
+          </article>
+
+          <article class="glass-card info-card reveal">
+            <div class="icon-box purple" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </div>
+            <h3>سهولة تحديث الموقع</h3>
+            <p>بمجرد حفظ تعديل جديد في المستودع أو دفعه عبر <span class="ltr" dir="ltr">Git</span>، تبدأ عملية نشر جديدة تلقائياً لتحديث النسخة الحية من الموقع.</p>
+          </article>
+
+          <article class="glass-card info-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <h3>إمكانية استخدام النطاق الخاص</h3>
+            <p>يمكن ربط الموقع بنطاق مخصص (<span class="ltr" dir="ltr">Custom Domain</span>) مثل <span class="code-tag">example.com</span> بدلاً من الاقتصار على نطاق <span class="code-tag">github.io</span> الافتراضي.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 8: LIMITATIONS
+         ======================================================================= -->
+    <section class="section" id="limitations">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم الثامن • <span class="ltr" dir="ltr">Limitations</span></span>
+          <h2 class="section-title">القيود التقنية التي يجب معرفتها بوضوح</h2>
+          <p class="section-lead">
+            فهم حدود أي خدمة سحابية جزء أساسي من التصميم الهندسي السليم؛ ولذلك توضّح النقاط التالية الحالات التي لا تغطيها <span class="ltr" dir="ltr">GitHub Pages</span> وحدها.
+          </p>
+        </div>
+
+        <div class="limit-grid">
+          <article class="glass-card limit-card reveal">
+            <div class="icon-box rose" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+            <div>
+              <h3 style="margin-bottom:6px;">لا يشغّل <span class="ltr" dir="ltr">Backend</span> تقليدياً</h3>
+              <p style="color:var(--text-secondary); font-size:0.95rem;">
+                لا يمكن تنفيذ شيفرات جهة الخادم مثل <span class="ltr" dir="ltr">PHP</span> أو <span class="ltr" dir="ltr">Python</span> أو <span class="ltr" dir="ltr">Node.js</span> مباشرة على خادم <span class="ltr" dir="ltr">GitHub Pages</span>؛ إذ يقتصر دوره على تسليم الملفات الثابتة.
+              </p>
+            </div>
+          </article>
+
+          <article class="glass-card limit-card reveal">
+            <div class="icon-box rose" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </div>
+            <div>
+              <h3 style="margin-bottom:6px;">لا يوفر قاعدة بيانات مدمجة</h3>
+              <p style="color:var(--text-secondary); font-size:0.95rem;">
+                لا تتضمن الخدمة محرك قواعد بيانات مدمجاً (مثل <span class="ltr" dir="ltr">MySQL</span> أو <span class="ltr" dir="ltr">PostgreSQL</span>) لتخزين حسابات المستخدمين أو المعاملات الديناميكية.
+              </p>
+            </div>
+          </article>
+
+          <article class="glass-card limit-card reveal">
+            <div class="icon-box rose" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div>
+              <h3 style="margin-bottom:6px;">لا يناسب جميع التطبيقات الديناميكية</h3>
+              <p style="color:var(--text-secondary); font-size:0.95rem;">
+                المتاجر الإلكترونية المتكاملة أو أنظمة إدارة المحتوى الخادمية أو الأنظمة التي تتطلب مصادقة وجلسات خادمية تحتاج إلى خدمات <span class="ltr" dir="ltr">Backend</span> أو استضافة تطبيقات مستقلة.
+              </p>
+            </div>
+          </article>
+
+          <article class="glass-card limit-card reveal">
+            <div class="icon-box rose" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div>
+              <h3 style="margin-bottom:6px;">وجود حدود وشروط استخدام</h3>
+              <p style="color:var(--text-secondary); font-size:0.95rem;">
+                تخضع الخدمة لضوابط وسياسات استخدام من <span class="ltr" dir="ltr">GitHub</span> (تشمل سعة الموقع ومعدل النشر والنطاق الترددي والاستخدام المسموح به) ينبغي مراجعتها في التوثيق الرسمي.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 9: COMPARISON (GITHUB PAGES VS TRADITIONAL HOSTING)
+         ======================================================================= -->
+    <section class="section" id="comparison">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم التاسع • <span class="ltr" dir="ltr">Comparison</span></span>
+          <h2 class="section-title">مقارنة بين <span class="ltr" dir="ltr">GitHub Pages</span> والاستضافة التقليدية</h2>
+          <p class="section-lead">
+            مقارنة مفاهيمية وتقنية تساعد على اختيار النموذج الأنسب وفق طبيعة المشروع ومتطلباته البرمجية.
+          </p>
+        </div>
+
+        <div class="compare-wrap reveal">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>معيار المقارنة</th>
+                <th><span class="ltr" dir="ltr">GitHub Pages</span></th>
+                <th>الاستضافة التقليدية (<span class="ltr" dir="ltr">Traditional Hosting</span>)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="compare-criteria">إدارة الخادم</td>
+                <td>مُدارة بالكامل من قبل <span class="ltr" dir="ltr">GitHub</span>؛ لا يحتاج المستخدم إلى إعداد خادم أو متابعة تحديثات النظام أو الصيانة.</td>
+                <td>تتطلب قدراً من الإدارة والإعداد (مثل لوحات التحكم أو إعدادات الخادم وتحديثات البيئة وشهادات الأمان).</td>
+              </tr>
+              <tr>
+                <td class="compare-criteria">سهولة النشر</td>
+                <td>سريعة ومباشرة؛ يُنشر الموقع تلقائياً بمجرد رفع الملفات أو دفع التحديثات إلى الفرع المحدد في المستودع.</td>
+                <td>تعتمد غالباً على رفع الملفات عبر <span class="ltr" dir="ltr">FTP/SFTP</span> أو لوحة تحكم أو إعداد خطوط نشر إضافية.</td>
+              </tr>
+              <tr>
+                <td class="compare-criteria">نوع التطبيقات</td>
+                <td>مخصصة للمواقع الثابتة (<span class="ltr" dir="ltr">HTML, CSS, JS</span>) ومخرجات مولّدات المواقع الثابتة دون <span class="ltr" dir="ltr">Backend</span> خادمي.</td>
+                <td>تدعم المواقع الثابتة والتطبيقات الديناميكية مع لغات الخادم (مثل <span class="ltr" dir="ltr">PHP, Python, Node.js</span>) وقواعد البيانات.</td>
+              </tr>
+              <tr>
+                <td class="compare-criteria">التحكم بالبنية التحتية</td>
+                <td>تحكم محدود يركز على إعدادات النشر والمصدر والنطاق، بينما تبقى البنية التحتية مُدارة ومخفية عن المستخدم.</td>
+                <td>تحكم أوسع في إعدادات الخادم والبرمجيات والملفات التكوينية وقواعد البيانات حسب نوع خطة الاستضافة.</td>
+              </tr>
+              <tr>
+                <td class="compare-criteria">التكلفة</td>
+                <td>متاحة ضمن حسابات <span class="ltr" dir="ltr">GitHub</span> للمستودعات العامة دون رسوم استضافة منفصلة (وتخضع بعض الميزات المتقدمة لخطط <span class="ltr" dir="ltr">GitHub</span>).</td>
+                <td>تتطلب عادةً اشتراكاً دورياً لدى مزوّد خدمة الاستضافة يختلف حسب الموارد والخدمات المضمّنة.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 10: REAL-WORLD USE CASES
+         ======================================================================= -->
+    <section class="section" id="use-cases">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">القسم العاشر • <span class="ltr" dir="ltr">Real-World Use Cases</span></span>
+          <h2 class="section-title">حالات استخدام واقعية لخدمة <span class="ltr" dir="ltr">GitHub Pages</span></h2>
+          <p class="section-lead">
+            تُستخدم الخدمة على نطاق واسع في البيئات الأكاديمية والمهنية لإطلاق مواقع سريعة وخفيفة خلال دقائق.
+          </p>
+        </div>
+
+        <div class="usecase-grid">
+          <article class="glass-card usecase-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </div>
+            <span class="usecase-en ltr" dir="ltr">Portfolio</span>
+            <h3>معارض الأعمال الشخصية</h3>
+            <p style="font-size:0.92rem; color:var(--text-secondary);">عرض السيرة الذاتية والمشاريع والمهارات التقنية للطلاب والمطورين عبر رابط احترافي سهل المشاركة.</p>
+          </article>
+
+          <article class="glass-card usecase-card reveal">
+            <div class="icon-box blue" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <span class="usecase-en ltr" dir="ltr">Documentation</span>
+            <h3>التوثيق التقني للمشاريع</h3>
+            <p style="font-size:0.92rem; color:var(--text-secondary);">نشر أدلة الاستخدام ومرجعيات الواجهات البرمجية للمكتبات والمشاريع مفتوحة المصدر بجانب الشيفرة نفسها.</p>
+          </article>
+
+          <article class="glass-card usecase-card reveal">
+            <div class="icon-box emerald" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            </div>
+            <span class="usecase-en ltr" dir="ltr">Landing Pages</span>
+            <h3>صفحات الهبوط التعريفية</h3>
+            <p style="font-size:0.92rem; color:var(--text-secondary);">إطلاق صفحات تعريفية سريعة لتطبيق أو منتج أو فعالية تقنية لعرض الفكرة والمزايا وروابط التحميل.</p>
+          </article>
+
+          <article class="glass-card usecase-card reveal">
+            <div class="icon-box purple" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
+            <span class="usecase-en ltr" dir="ltr">Student Projects</span>
+            <h3>المشاريع الجامعية والطلابية</h3>
+            <p style="font-size:0.92rem; color:var(--text-secondary);">تسليم مشاريع المقررات الدراسية كروابط حية يمكن لأعضاء هيئة التدريس تصفحها وتقييمها مباشرة من المتصفح.</p>
+          </article>
+
+          <article class="glass-card usecase-card reveal">
+            <div class="icon-box" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <span class="usecase-en ltr" dir="ltr">Static Educational Websites</span>
+            <h3>المواقع التعليمية الثابتة</h3>
+            <p style="font-size:0.92rem; color:var(--text-secondary);">بناء منصات شرح تفاعلية وملخصات وعروض موشن جرافيك تعليمية تعمل بسلاسة دون الحاجة لخوادم معقدة.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SECTION 11: CONCLUSION
+         ======================================================================= -->
+    <section class="section" id="conclusion">
+      <div class="container">
+        <div class="conclusion-box reveal">
+          <span class="section-kicker">القسم الحادي عشر • <span class="ltr" dir="ltr">Conclusion</span></span>
+          <h2>أهمية خدمات الاستضافة السحابية في العصر الحديث</h2>
+          <p>
+            تُجسّد خدمة <span class="ltr" dir="ltr">GitHub Pages</span> أحد أبرز أهداف الحوسبة السحابية: إزالة الحواجز التقنية بين الفكرة وإتاحتها للعالم. فمن خلال تحويل مستودع برمجي بسيط إلى موقع ثابت آمن وسريع، تمكّن هذه الخدمة الطلاب والمطورين من التركيز على جودة المحتوى والتصميم والهندسة البرمجية بدلاً من الانشغال بتعقيدات الخوادم التقليدية — مع وعي كامل بحدود الاستضافة الثابتة ومتى نحتاج إلى بنية خلفية متكاملة.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         MOTION GRAPHICS FEATURE SECTION
+         ======================================================================= -->
+    <section class="section" id="motion-feature">
+      <div class="container">
+        <div class="motion-card reveal">
+          <div>
+            <span class="section-kicker">تجربة بصرية تفاعلية • <span class="ltr" dir="ltr">Motion Graphics</span></span>
+            <h2>شاهد رحلة الموقع إلى السحابة</h2>
+            <p>
+              فيلم موشن جرافيك تفاعلي يشرح آلية عمل <span class="ltr" dir="ltr">GitHub Pages</span> خلال أقل من ثلاث دقائق.
+            </p>
+            <a href="github_pages_motion.html" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6,4 20,12 6,20"/></svg>
+              <span>تشغيل الفيلم التعليمي الآن</span>
+            </a>
+          </div>
+
+          <div class="motion-preview-box" aria-hidden="true">
+            <svg viewBox="0 0 360 190" width="360" height="190" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="6" width="348" height="178" rx="14" fill="#061228" stroke="rgba(34,211,238,0.4)" stroke-width="1.6"/>
+              <path d="M52 110 C115 48, 245 48, 308 110" fill="none" stroke="#22d3ee" stroke-width="2.4" class="svg-dash"/>
+              <circle cx="52" cy="110" r="18" fill="#0d2550" stroke="#38bdf8" stroke-width="2"/>
+              <text x="52" y="114" text-anchor="middle" fill="#67e8f9" font-size="10" font-family="monospace">HTML</text>
+              <circle cx="180" cy="70" r="24" fill="#132a5c" stroke="#22d3ee" stroke-width="2.2"/>
+              <polygon points="174,60 192,70 174,80" fill="#67e8f9"/>
+              <circle cx="308" cy="110" r="18" fill="#082e46" stroke="#10b981" stroke-width="2"/>
+              <text x="308" y="114" text-anchor="middle" fill="#6ee7b7" font-size="10" font-family="monospace">LIVE</text>
+              <text x="180" y="156" text-anchor="middle" fill="#cbd5e1" font-size="12" font-weight="700">8 مشاهد تعليمية • المدة 02:45 • بدون إنترنت</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         OFFICIAL SOURCES SECTION
+         ======================================================================= -->
+    <section class="section" id="sources">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-kicker">المصادر والمراجع الرسمية • <span class="ltr" dir="ltr">Official Documentation</span></span>
+          <h2 class="section-title">المراجع المعتمدة للاستزادة والتوثيق</h2>
+          <p class="section-lead">
+            تستند المعلومات التقنية في هذه المنصة إلى التوثيق الرسمي لخدمة <span class="ltr" dir="ltr">GitHub Pages</span> ومستودعات <span class="ltr" dir="ltr">GitHub</span>.
+          </p>
+        </div>
+
+        <div class="sources-grid">
+          <a class="glass-card source-card reveal" href="https://docs.github.com/en/pages" target="_blank" rel="noopener noreferrer">
+            <div>
+              <h3>توثيق <span class="ltr" dir="ltr">GitHub Pages</span> الرسمي</h3>
+              <p>المرجع الشامل لإعداد النشر، مصادر البناء، النطاقات المخصصة، وتفعيل <span class="ltr" dir="ltr">HTTPS</span> وحدود الاستخدام.</p>
+            </div>
+            <span class="source-url ltr" dir="ltr">https://docs.github.com/en/pages ↗</span>
+          </a>
+
+          <a class="glass-card source-card reveal" href="https://pages.github.com/" target="_blank" rel="noopener noreferrer">
+            <div>
+              <h3>الموقع التعريفي لـ <span class="ltr" dir="ltr">GitHub Pages</span></h3>
+              <p>نظرة سريعة وتفاعلية على الخدمة وخطوات البدء الأولى لإنشاء مواقع المستخدمين والمشاريع.</p>
+            </div>
+            <span class="source-url ltr" dir="ltr">https://pages.github.com/ ↗</span>
+          </a>
+
+          <a class="glass-card source-card reveal" href="https://docs.github.com/en/repositories" target="_blank" rel="noopener noreferrer">
+            <div>
+              <h3>توثيق مستودعات <span class="ltr" dir="ltr">GitHub Repositories</span></h3>
+              <p>دليل إنشاء المستودعات، إدارة الفروع والملفات، والتحكم بإعدادات المستودع وصلاحيات الوصول.</p>
+            </div>
+            <span class="source-url ltr" dir="ltr">https://docs.github.com/en/repositories ↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       ACADEMIC FOOTER (CONFIGURABLE OPTIONAL INSTRUCTOR & UNIVERSITY)
+       ========================================================================= -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-academic">
+        <div class="footer-course" id="footer-course">مشروع تطبيقي في مقرر الحوسبة السحابية</div>
+        <div class="footer-student" id="footer-student">إعداد الطالب: محمد البكير</div>
+        <div class="footer-optional" id="footer-instructor" hidden></div>
+        <div class="footer-optional" id="footer-university" hidden></div>
+      </div>
+
+      <div class="footer-links">
+        <a href="#hero">الأعلى</a>
+        <a href="#architecture">المعمارية</a>
+        <a href="#implementation">التطبيق العملي</a>
+        <a href="github_pages_motion.html">فيلم الموشن جرافيك</a>
+        <a href="#sources">المصادر</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =======================================================================
+         ACADEMIC IDENTITY CONFIGURATION (إعدادات الهوية الأكاديمية الاختيارية)
+         اترك instructorName أو universityName فارغاً إذا لم ترغب في إظهارهما،
+         أو اكتب الاسم داخل علامتي التنصيص ليظهر تلقائياً في التذييل.
+         ======================================================================= */
+      const ACADEMIC_CONFIG = {
+        courseTitle: 'مشروع تطبيقي في مقرر الحوسبة السحابية',
+        studentName: 'محمد البكير',
+        instructorName: '', // اختياري: مثال 'إشراف الدكتورة: ...'
+        universityName: ''  // اختياري: مثال 'الجامعة: ...'
+      };
+
+      function applyAcademicConfig() {
+        const courseEl = document.getElementById('footer-course');
+        const studentEl = document.getElementById('footer-student');
+        const instEl = document.getElementById('footer-instructor');
+        const uniEl = document.getElementById('footer-university');
+
+        if (courseEl && ACADEMIC_CONFIG.courseTitle) {
+          courseEl.textContent = ACADEMIC_CONFIG.courseTitle;
+        }
+        if (studentEl && ACADEMIC_CONFIG.studentName) {
+          studentEl.textContent = 'إعداد الطالب: ' + ACADEMIC_CONFIG.studentName;
+        }
+        if (instEl && ACADEMIC_CONFIG.instructorName.trim() !== '') {
+          instEl.textContent = ACADEMIC_CONFIG.instructorName.trim();
+          instEl.hidden = false;
+        }
+        if (uniEl && ACADEMIC_CONFIG.universityName.trim() !== '') {
+          uniEl.textContent = ACADEMIC_CONFIG.universityName.trim();
+          uniEl.hidden = false;
+        }
+      }
+
+      /* =======================================================================
+         1. MOBILE DRAWER & SCROLL PROGRESS + ACTIVE NAV HIGHLIGHTING
+         ======================================================================= */
+      const navToggle = document.getElementById('nav-toggle');
+      const mobileDrawer = document.getElementById('mobile-drawer');
+      const scrollProgress = document.getElementById('scroll-progress');
+      const desktopLinks = Array.from(document.querySelectorAll('#desktop-nav a'));
+
+      navToggle.addEventListener('click', function () {
+        const isOpen = mobileDrawer.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+      });
+
+      mobileDrawer.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () {
+          mobileDrawer.classList.remove('open');
+          navToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      function updateScrollUI() {
+        const doc = document.documentElement;
+        const maxScroll = doc.scrollHeight - doc.clientHeight;
+        const pct = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
+        scrollProgress.style.width = Math.min(100, Math.max(0, pct)).toFixed(1) + '%';
+
+        const scrollPos = window.scrollY + 130;
+        let currentId = '';
+        desktopLinks.forEach(function (a) {
+          const target = document.querySelector(a.getAttribute('href'));
+          if (target && target.offsetTop <= scrollPos) {
+            currentId = a.getAttribute('href');
+          }
+        });
+        desktopLinks.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === currentId);
+        });
+      }
+
+      window.addEventListener('scroll', updateScrollUI, { passive: true });
+      updateScrollUI();
+
+      /* =======================================================================
+         2. SCROLL REVEAL (INTERSECTION OBSERVER)
+         ======================================================================= */
+      const revealEls = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12 });
+        revealEls.forEach(function (el) { observer.observe(el); });
+      } else {
+        revealEls.forEach(function (el) { el.classList.add('is-visible'); });
+      }
+
+      /* =======================================================================
+         3. HERO SVG DATA PACKET ANIMATION + PAUSE TOGGLE
+         ======================================================================= */
+      const heroVisual = document.getElementById('hero-visual');
+      const heroAnimToggle = document.getElementById('hero-anim-toggle');
+      const heroPath1 = document.getElementById('hero-path-1');
+      const heroPath2 = document.getElementById('hero-path-2');
+      const hPkt1 = document.getElementById('h-pkt-1');
+      const hPkt2 = document.getElementById('h-pkt-2');
+      let heroPaused = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let heroT = 0;
+      let lastHeroTs = null;
+
+      function moveDot(pathEl, dotEl, progress) {
+        if (!pathEl || !dotEl) return;
+        const len = pathEl.getTotalLength();
+        const pt = pathEl.getPointAtLength(len * (progress % 1));
+        dotEl.setAttribute('cx', pt.x.toFixed(1));
+        dotEl.setAttribute('cy', pt.y.toFixed(1));
+      }
+
+      function tickHero(ts) {
+        if (lastHeroTs === null) lastHeroTs = ts;
+        const dt = Math.min(0.1, (ts - lastHeroTs) / 1000);
+        lastHeroTs = ts;
+        if (!heroPaused) {
+          heroT += dt * 0.45;
+          moveDot(heroPath1, hPkt1, heroT);
+          moveDot(heroPath2, hPkt2, heroT + 0.5);
+        }
+        requestAnimationFrame(tickHero);
+      }
+
+      if (heroPaused) {
+        heroVisual.classList.add('paused');
+        heroAnimToggle.textContent = 'تشغيل الحركة';
+        heroAnimToggle.setAttribute('aria-pressed', 'true');
+      }
+
+      heroAnimToggle.addEventListener('click', function () {
+        heroPaused = !heroPaused;
+        heroVisual.classList.toggle('paused', heroPaused);
+        heroAnimToggle.textContent = heroPaused ? 'تشغيل الحركة' : 'إيقاف الحركة';
+        heroAnimToggle.setAttribute('aria-pressed', String(heroPaused));
+      });
+
+      requestAnimationFrame(tickHero);
+
+      /* =======================================================================
+         4. SECTION 3: INTERACTIVE "HOW IT WORKS" PIPELINE
+         ======================================================================= */
+      const PIPE_STAGES = [
+        {
+          title: '1. المطوّر (Developer)',
+          text: 'يقوم المطوّر بكتابة وتجهيز ملفات الموقع الثابتة محلياً (مثل index.html وملفات CSS وJavaScript والصور)، ثم يختبرها على جهازه قبل رفعها إلى مستودع GitHub.',
+          output: 'ملفات واجهة أمامية منظمة وجاهزة للرفع عبر Git أو واجهة الويب.'
+        },
+        {
+          title: '2. المستودع (Repository)',
+          text: 'يستقبل مستودع GitHub ملفات المشروع ويحفظها ضمن فرع محدد (مثل main)، مع الاحتفاظ بسجل كامل لكل تعديل وإصدار لتسهيل التتبع والتراجع عند الحاجة.',
+          output: 'نسخة سحابية موثّقة ومرتبطة بفرع مصدر واضح.'
+        },
+        {
+          title: '3. البناء والنشر (Build & Deployment)',
+          text: 'عند تفعيل GitHub Pages أو دفع تحديث جديد، تتولى البنية السحابية قراءة ملفات المصدر وتجهيز الحزمة الثابتة ونشرها تلقائياً عبر خوادم التوزيع.',
+          output: 'حزمة ملفات ثابتة مجهزة للنشر ومرتبطة بشهادة HTTPS.'
+        },
+        {
+          title: '4. الموقع المنشور (Published Website)',
+          text: 'يصبح الموقع حياً ومتاحاً للعامة عبر عنوان URL افتراضي (مثل username.github.io) أو عبر نطاق مخصص يربطه صاحب المشروع.',
+          output: 'رابط ويب عام وآمن يعمل على مدار الساعة.'
+        },
+        {
+          title: '5. الزائر (Visitor)',
+          text: 'يفتح الزائر الرابط من أي متصفح على الهاتف أو الحاسوب، فتُرسل إليه ملفات HTML وCSS وJavaScript مباشرة ليعرضها المتصفح بسرعة وسلاسة.',
+          output: 'تجربة تصفح فورية تُنفّذ بالكامل على جهاز المستخدم.'
+        }
+      ];
+
+      const pipeButtons = Array.from(document.querySelectorAll('.pipe-node'));
+      const pipeTitle = document.getElementById('pipe-detail-title');
+      const pipeText = document.getElementById('pipe-detail-text');
+      const pipeOutput = document.getElementById('pipe-detail-output');
+      const pipeAutoBtn = document.getElementById('pipe-auto-btn');
+      let currentPipe = 0;
+      let pipeTimer = null;
+
+      function selectPipe(index) {
+        currentPipe = index;
+        pipeButtons.forEach(function (btn, i) {
+          const active = i === index;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-selected', String(active));
+        });
+        pipeTitle.textContent = PIPE_STAGES[index].title;
+        pipeText.textContent = PIPE_STAGES[index].text;
+        pipeOutput.textContent = PIPE_STAGES[index].output;
+      }
+
+      pipeButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          stopPipeAuto();
+          selectPipe(Number(btn.dataset.pipe));
+        });
+      });
+
+      function stopPipeAuto() {
+        if (pipeTimer !== null) {
+          clearInterval(pipeTimer);
+          pipeTimer = null;
+          pipeAutoBtn.textContent = 'تشغيل الجولة التلقائية';
+        }
+      }
+
+      pipeAutoBtn.addEventListener('click', function () {
+        if (pipeTimer !== null) {
+          stopPipeAuto();
+          return;
+        }
+        pipeAutoBtn.textContent = 'إيقاف الجولة التلقائية';
+        pipeTimer = setInterval(function () {
+          selectPipe((currentPipe + 1) % PIPE_STAGES.length);
+        }, 2800);
+      });
+
+      /* =======================================================================
+         5. SECTION 4: INTERACTIVE ARCHITECTURE INSPECTOR & FLOW FILTERS
+         ======================================================================= */
+      const ARCH_NODES = {
+        developer: {
+          phase: 'مرحلة التطوير والرفع',
+          title: 'Developer — المطوّر',
+          desc: 'نقطة انطلاق العملية؛ ينشئ المطوّر صفحات الموقع الثابتة محلياً، ويتحقق من سلامة الروابط والتصميم، ثم يدفع التغييرات إلى المستودع السحابي.',
+          io: 'Output: Source Code → Local Project'
+        },
+        local: {
+          phase: 'مرحلة التطوير والرفع',
+          title: 'Local Project — المشروع المحلي',
+          desc: 'مجلد المشروع على جهاز المطوّر، ويحتوي على index.html وملفات التنسيق والبرمجة والرسوم الثابتة قبل مزامنتها مع GitHub.',
+          io: 'Sync: git push / Web Upload → Repository'
+        },
+        repo: {
+          phase: 'مرحلة التطوير والنشر السحابي',
+          title: 'GitHub Repository — مستودع GitHub',
+          desc: 'الحاوية السحابية التي تحفظ الشيفرة المصدرية وتاريخ التعديلات، وتشكّل نقطة الربط المباشرة مع خدمة GitHub Pages.',
+          io: 'Contains: Branches, Files & Settings'
+        },
+        branch: {
+          phase: 'مرحلة النشر السحابي',
+          title: 'Source Branch — فرع المصدر',
+          desc: 'الفرع المحدد في الإعدادات (مثل main أو gh-pages) أو مخرجات GitHub Actions الذي تقرأ منه خدمة النشر نسخة الموقع المعتمدة.',
+          io: 'Trigger: Commit on Selected Branch'
+        },
+        pages: {
+          phase: 'مرحلة النشر السحابي',
+          title: 'GitHub Pages — خدمة النشر السحابي',
+          desc: 'الخدمة السحابية المُدارة التي تستقبل إعدادات المصدر من المستودع وتطلق مسار التجهيز والنشر تلقائياً دون خادم خاص بالمستخدم.',
+          io: 'Mode: Static Website Hosting'
+        },
+        deploy: {
+          phase: 'مرحلة النشر السحابي',
+          title: 'Deployment Process — عملية النشر',
+          desc: 'المرحلة المؤتمتة التي تُجهّز فيها الملفات الثابتة وتُوزّع على البنية السحابية لـ GitHub مع تهيئة الاتصال المشفّر عبر HTTPS.',
+          io: 'Result: Live Static Bundle'
+        },
+        url: {
+          phase: 'مرحلة وصول الزائر',
+          title: 'Website URL — رابط الموقع المنشور',
+          desc: 'العنوان العام الذي يصل عبره الزوار إلى الموقع، سواء عبر نطاق github.io الافتراضي أو عبر نطاق مخصص يضبطه صاحب المشروع.',
+          io: 'Protocol: HTTPS (TLS Encrypted)'
+        },
+        browser: {
+          phase: 'مرحلة وصول الزائر',
+          title: 'Visitor Browser — متصفح الزائر',
+          desc: 'يرسل طلب HTTPS لجلب ملفات HTML وCSS وJavaScript الجاهزة، ثم يعرض الواجهة ويشغّل التفاعلات محلياً على جهاز المستخدم.',
+          io: 'Execution: Client-Side Rendering'
+        }
+      };
+
+      const archNodeEls = Array.from(document.querySelectorAll('.arch-node'));
+      const archEdgeEls = Array.from(document.querySelectorAll('.arch-edge'));
+      const archFilterBtns = Array.from(document.querySelectorAll('.arch-filter-btn'));
+      const inspPhase = document.getElementById('arch-insp-phase');
+      const inspTitle = document.getElementById('arch-insp-title');
+      const inspDesc = document.getElementById('arch-insp-desc');
+      const inspIO = document.getElementById('arch-insp-io');
+
+      function showArchNode(key) {
+        const info = ARCH_NODES[key];
+        if (!info) return;
+        inspPhase.textContent = info.phase;
+        inspTitle.textContent = info.title;
+        inspDesc.textContent = info.desc;
+        inspIO.textContent = info.io;
+        archNodeEls.forEach(function (n) {
+          n.classList.toggle('highlighted', n.dataset.node === key);
+        });
+      }
+
+      archNodeEls.forEach(function (node) {
+        node.addEventListener('click', function () {
+          showArchNode(node.dataset.node);
+        });
+        node.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            showArchNode(node.dataset.node);
+          }
+        });
+      });
+
+      archFilterBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const phase = btn.dataset.phase;
+          archFilterBtns.forEach(function (b) { b.classList.toggle('active', b === btn); });
+
+          archNodeEls.forEach(function (n) {
+            const phases = (n.dataset.nodePhase || '').split(' ');
+            const match = phase === 'all' || phases.includes(phase);
+            n.classList.toggle('dimmed', !match);
+          });
+
+          archEdgeEls.forEach(function (e) {
+            const match = phase === 'all' || e.dataset.edgePhase === phase;
+            e.classList.toggle('dimmed', !match);
+          });
+
+          if (phase === 'dev') showArchNode('local');
+          else if (phase === 'cloud') showArchNode('pages');
+          else if (phase === 'client') showArchNode('browser');
+          else showArchNode('developer');
+        });
+      });
+
+      /* =======================================================================
+         6. SECTION 5: PRACTICAL IMPLEMENTATION (9 INTERACTIVE STEPS)
+         ======================================================================= */
+      const IMPL_STEPS = [
+        {
+          url: 'https://github.com/signup',
+          title: 'الخطوة 1: إنشاء حساب GitHub',
+          desc: 'ابدأ بإنشاء حساب مجاني على منصة GitHub باستخدام بريدك الإلكتروني واختيار اسم مستخدم واضح، إذ سيظهر اسم المستخدم لاحقاً ضمن رابط الموقع الافتراضي.',
+          html: '<div style="display:flex;flex-direction:column;gap:12px;"><div style="color:#f8fafc;font-weight:700;font-size:1rem;">Welcome — Create your account</div><div style="background:#0a1834;border:1px solid rgba(56,189,248,0.35);padding:10px 12px;border-radius:8px;font-family:monospace;color:#67e8f9;">Username: student-cloud</div><div style="background:#0a1834;border:1px solid rgba(148,163,184,0.25);padding:10px 12px;border-radius:8px;font-family:monospace;color:#cbd5e1;">Email: student@example.edu</div><div style="align-self:flex-start;background:linear-gradient(135deg,#22d3ee,#3b82f6);color:#031020;font-weight:800;padding:8px 18px;border-radius:8px;">Continue →</div></div>'
+        },
+        {
+          url: 'https://github.com/new',
+          title: 'الخطوة 2: إنشاء Repository جديد',
+          desc: 'من القائمة العلوية اختر إنشاء مستودع جديد (New repository)، وأعطه اسماً مناسباً لمشروعك مثل github-pages-project مع اختيار Public لإتاحة النشر العام.',
+          html: '<div style="display:flex;flex-direction:column;gap:12px;"><div style="color:#f8fafc;font-weight:700;font-size:1rem;">Create a new repository</div><div style="background:#0a1834;border:1px solid rgba(56,189,248,0.45);padding:10px 12px;border-radius:8px;font-family:monospace;color:#67e8f9;">Repository name: github-pages-project</div><div style="display:flex;gap:16px;font-size:0.85rem;"><span style="color:#6ee7b7;font-weight:700;">● Public (Recommended)</span><span style="color:#64748b;">○ Private</span></div><div style="align-self:flex-start;background:#10b981;color:#031020;font-weight:800;padding:8px 18px;border-radius:8px;">Create repository</div></div>'
+        },
+        {
+          url: 'https://github.com/student-cloud/github-pages-project/new/main',
+          title: 'الخطوة 3: إضافة ملف index.html',
+          desc: 'تعتمد خدمة GitHub Pages على وجود ملف index.html في المجلد الجذري (أو مجلد النشر المختار) ليكون الصفحة الرئيسية التي تُفتح تلقائياً عند زيارة الرابط.',
+          html: '<div style="display:flex;flex-direction:column;gap:10px;"><div style="font-family:monospace;color:#67e8f9;">github-pages-project / <strong>index.html</strong></div><pre style="background:#040b18;border:1px solid rgba(56,189,248,0.28);padding:12px;border-radius:8px;font-family:monospace;font-size:0.8rem;color:#e2e8f0;overflow-x:auto;margin:0;">&lt;!DOCTYPE html&gt;\n&lt;html lang="ar" dir="rtl"&gt;\n  &lt;head&gt;&lt;title&gt;GitHub Pages&lt;/title&gt;&lt;/head&gt;\n  &lt;body&gt;&lt;h1&gt;مشروع الحوسبة السحابية&lt;/h1&gt;&lt;/body&gt;\n&lt;/html&gt;</pre></div>'
+        },
+        {
+          url: 'https://github.com/student-cloud/github-pages-project/upload/main',
+          title: 'الخطوة 4: رفع ملفات الموقع',
+          desc: 'ارفع بقية ملفات المشروع (مثل github_pages_motion.html وREADME.md وأي ملفات مساعدة) إما بسحبها مباشرة عبر Upload files أو بدفعها باستخدام أوامر Git، ثم احفظها بـ Commit.',
+          html: '<div style="display:flex;flex-direction:column;gap:10px;"><div style="border:1.5px dashed rgba(34,211,238,0.5);border-radius:10px;padding:16px;text-align:center;background:rgba(34,211,238,0.06);"><div style="color:#67e8f9;font-weight:700;margin-bottom:8px;">Uploaded Project Files</div><div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;font-family:monospace;font-size:0.8rem;"><span style="background:#0c2248;padding:4px 10px;border-radius:6px;color:#e0f2fe;">index.html</span><span style="background:#0c2248;padding:4px 10px;border-radius:6px;color:#e0f2fe;">github_pages_motion.html</span><span style="background:#0c2248;padding:4px 10px;border-radius:6px;color:#e0f2fe;">README.md</span></div></div><div style="align-self:flex-start;background:#10b981;color:#031020;font-weight:800;padding:7px 16px;border-radius:8px;">Commit changes</div></div>'
+        },
+        {
+          url: 'https://github.com/student-cloud/github-pages-project/settings',
+          title: 'الخطوة 5: فتح Settings',
+          desc: 'من الشريط العلوي لصفحة المستودع، اضغط على تبويب Settings للوصول إلى جميع إعدادات المشروع وخيارات النشر.',
+          html: '<div style="display:flex;flex-direction:column;gap:14px;"><div style="display:flex;gap:14px;border-bottom:1px solid rgba(148,163,184,0.2);padding-bottom:10px;font-size:0.84rem;"><span style="color:#94a3b8;">&lt;&gt; Code</span><span style="color:#94a3b8;">Issues</span><span style="color:#94a3b8;">Actions</span><span style="color:#67e8f9;font-weight:800;border-bottom:2px solid #22d3ee;padding-bottom:8px;">⚙ Settings</span></div><div style="color:#cbd5e1;font-size:0.86rem;">Repository General Settings &amp; Configuration Panel</div></div>'
+        },
+        {
+          url: 'https://github.com/student-cloud/github-pages-project/settings/pages',
+          title: 'الخطوة 6: اختيار Pages',
+          desc: 'من القائمة الجانبية داخل صفحة الإعدادات، انتقل إلى قسم Pages الخاص بخدمة استضافة المواقع الثابتة.',
+          html: '<div style="display:grid;grid-template-columns:130px 1fr;gap:14px;"><div style="border-right:1px solid rgba(148,163,184,0.2);padding-right:10px;display:flex;flex-direction:column;gap:6px;font-size:0.82rem;"><span style="color:#94a3b8;padding:5px 8px;">General</span><span style="color:#94a3b8;padding:5px 8px;">Branches</span><span style="background:rgba(34,211,238,0.18);color:#67e8f9;font-weight:800;padding:6px 8px;border-radius:6px;border-left:3px solid #22d3ee;">Pages</span><span style="color:#94a3b8;padding:5px 8px;">Actions</span></div><div><div style="color:#f8fafc;font-weight:700;margin-bottom:6px;">GitHub Pages</div><div style="color:#94a3b8;font-size:0.82rem;">Configure static website hosting directly from your repository.</div></div></div>'
+        },
+        {
+          url: 'https://github.com/student-cloud/github-pages-project/settings/pages',
+          title: 'الخطوة 7: تحديد مصدر النشر',
+          desc: 'في قسم Build and deployment، اختر Deploy from a branch، ثم حدد الفرع الرئيسي (مثل main) والمجلد الجذري (/ root)، واضغط Save لحفظ الإعدادات.',
+          html: '<div style="display:flex;flex-direction:column;gap:10px;"><div style="color:#f8fafc;font-weight:700;">Build and deployment</div><div style="background:#0a1834;border:1px solid rgba(56,189,248,0.35);padding:8px 12px;border-radius:8px;color:#e2e8f0;font-size:0.83rem;">Source: Deploy from a branch ▾</div><div style="display:flex;gap:8px;flex-wrap:wrap;"><span style="background:#0a1834;border:1px solid #22d3ee;padding:7px 12px;border-radius:8px;font-family:monospace;color:#67e8f9;">Branch: main</span><span style="background:#0a1834;border:1px solid rgba(148,163,184,0.3);padding:7px 12px;border-radius:8px;font-family:monospace;color:#cbd5e1;">/ (root)</span><span style="background:linear-gradient(135deg,#22d3ee,#3b82f6);color:#031020;font-weight:800;padding:7px 16px;border-radius:8px;">Save</span></div></div>'
+        },
+        {
+          url: 'https://github.com/student-cloud/github-pages-project/actions',
+          title: 'الخطوة 8: انتظار Deployment',
+          desc: 'تبدأ خدمة GitHub تلقائياً عملية البناء والنشر (Deployment). تستغرق العملية عادةً وقتاً قصيراً يمكنك متابعة حالته من تبويب Actions حتى تظهر علامة النجاح.',
+          html: '<div style="display:flex;flex-direction:column;gap:12px;"><div style="color:#f8fafc;font-weight:700;">pages-build-deployment</div><div style="background:rgba(148,163,184,0.18);height:10px;border-radius:999px;overflow:hidden;"><div style="width:100%;height:100%;background:linear-gradient(90deg,#3b82f6,#22d3ee,#10b981);"></div></div><div style="display:flex;justify-content:space-between;font-family:monospace;font-size:0.8rem;color:#6ee7b7;"><span>✓ build → ✓ report-build-status → ✓ deploy</span><span>Completed</span></div></div>'
+        },
+        {
+          url: 'https://student-cloud.github.io/github-pages-project/',
+          title: 'الخطوة 9: فتح رابط الموقع المنشور',
+          desc: 'بعد اكتمال النشر، يظهر رابط الموقع الحي أعلى صفحة إعدادات Pages. اضغط عليه لفتح موقعك عبر HTTPS ومشاركته مع الدكتورة والزملاء.',
+          html: '<div style="display:flex;flex-direction:column;gap:12px;"><div style="padding:12px 14px;border-radius:10px;background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.45);color:#a7f3d0;font-size:0.85rem;">✓ Your site is live at <strong>https://student-cloud.github.io/github-pages-project/</strong></div><div style="display:flex;gap:10px;align-items:center;"><span style="background:linear-gradient(135deg,#10b981,#22d3ee);color:#031020;font-weight:800;padding:8px 16px;border-radius:8px;">Visit site ↗</span><span style="font-size:0.8rem;color:#94a3b8;">🔒 Enforce HTTPS enabled</span></div></div>'
+        }
+      ];
+
+      const stepBtns = Array.from(document.querySelectorAll('.step-btn'));
+      const mockupUrl = document.getElementById('mockup-url');
+      const mockupBody = document.getElementById('mockup-body');
+      const mockupTitle = document.getElementById('mockup-title');
+      const mockupDesc = document.getElementById('mockup-desc');
+      const stepCounter = document.getElementById('step-counter');
+      const stepPrev = document.getElementById('step-prev');
+      const stepNext = document.getElementById('step-next');
+      let currentStep = 0;
+
+      function renderStep(idx) {
+        currentStep = Math.max(0, Math.min(IMPL_STEPS.length - 1, idx));
+        const item = IMPL_STEPS[currentStep];
+        stepBtns.forEach(function (b, i) {
+          const active = i === currentStep;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-selected', String(active));
+        });
+        mockupUrl.textContent = item.url;
+        mockupBody.innerHTML = item.html;
+        mockupTitle.textContent = item.title;
+        mockupDesc.textContent = item.desc;
+        stepCounter.textContent = (currentStep + 1) + ' / ' + IMPL_STEPS.length;
+        stepPrev.disabled = currentStep === 0;
+        stepNext.disabled = currentStep === IMPL_STEPS.length - 1;
+      }
+
+      stepBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          renderStep(Number(btn.dataset.step));
+        });
+      });
+
+      stepPrev.addEventListener('click', function () { renderStep(currentStep - 1); });
+      stepNext.addEventListener('click', function () { renderStep(currentStep + 1); });
+
+      applyAcademicConfig();
+      selectPipe(0);
+      renderStep(0);
+    })();
+  </script>
+</body>
+</html>

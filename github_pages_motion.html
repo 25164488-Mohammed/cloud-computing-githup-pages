@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Pages — Cloud-Based Static Website Hosting and Deployment</title>
+  <style>
+    /* =========================================================================
+       1. DESIGN TOKENS & GLOBAL RESET (OFFLINE, ZERO EXTERNAL DEPENDENCIES)
+       ========================================================================= */
+    :root {
+      --bg-deep: #040b18;
+      --bg-navy: #08152e;
+      --bg-panel: rgba(11, 27, 56, 0.84);
+      --bg-card: rgba(13, 33, 68, 0.88);
+      --border-cyan: rgba(34, 211, 238, 0.34);
+      --border-blue: rgba(59, 130, 246, 0.34);
+      --border-purple: rgba(168, 85, 247, 0.36);
+
+      --cyan: #22d3ee;
+      --cyan-bright: #67e8f9;
+      --blue: #3b82f6;
+      --blue-bright: #60a5fa;
+      --purple: #a855f7;
+      --emerald: #10b981;
+      --rose: #fb7185;
+      --amber: #f59e0b;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+
+      --font-ar: 'Segoe UI', 'SF Pro Arabic', 'Geeza Pro', 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif;
+      --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace;
+
+      --stage-w: 1280px;
+      --stage-h: 720px;
+      --stage-scale: 1;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 35%, #0c1f42 0%, #050d1e 62%, #030712 100%);
+      color: var(--text-primary);
+      font-family: var(--font-ar);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    /* Strict LTR isolation for English terms, code, URLs, and numbers */
+    .ltr {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .code-inline {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--cyan-bright);
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.28);
+      border-radius: 6px;
+      padding: 0 7px;
+      line-height: 1.45;
+    }
+
+    /* =========================================================================
+       2. RESPONSIVE 16:9 CINEMA STAGE SHELL
+       ========================================================================= */
+    #cinema-shell {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 50% 45%, #0b1c3d 0%, #040b18 75%);
+    }
+
+    #stage {
+      position: relative;
+      width: var(--stage-w);
+      height: var(--stage-h);
+      transform: scale(var(--stage-scale));
+      transform-origin: center center;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(34, 211, 238, 0.12) 0%, transparent 42%),
+        radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.15) 0%, transparent 46%),
+        radial-gradient(circle at 50% 88%, rgba(168, 85, 247, 0.11) 0%, transparent 48%),
+        linear-gradient(155deg, #050e20 0%, #091a38 48%, #061228 100%);
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      border-radius: 14px;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.72), 0 0 60px rgba(34, 211, 238, 0.08);
+      overflow: hidden;
+    }
+
+    #cinema-shell.is-fullscreen #stage {
+      border-radius: 0;
+      border-color: transparent;
+    }
+
+    /* Global Pause Freeze: stops EVERY CSS/SVG animation & transition precisely */
+    #stage.is-paused *,
+    #stage.is-paused *::before,
+    #stage.is-paused *::after {
+      animation-play-state: paused !important;
+      transition: none !important;
+    }
+
+    /* =========================================================================
+       3. CINEMATIC AMBIENT BACKDROP (GRID, GLOWS, RESTRAINED PARTICLES)
+       ========================================================================= */
+    .ambient-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56, 189, 248, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.055) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.75) 15%, transparent 82%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.75) 15%, transparent 82%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #particle-canvas {
+      position: absolute;
+      inset: 0;
+      width: 1280px;
+      height: 720px;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.65;
+    }
+
+    /* =========================================================================
+       4. TOP HEADER SAFE ZONE (y: 0..76px)
+       ========================================================================= */
+    .stage-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 74px;
+      padding: 16px 36px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .scene-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .scene-pill {
+      background: rgba(34, 211, 238, 0.14);
+      border: 1px solid rgba(34, 211, 238, 0.42);
+      color: var(--cyan-bright);
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+
+    .scene-heading {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-shadow: 0 2px 14px rgba(34, 211, 238, 0.22);
+      white-space: nowrap;
+    }
+
+    .brand-tag {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(8, 21, 46, 0.78);
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+
+    .home-back-link {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(14, 34, 72, 0.88);
+      border: 1px solid rgba(34, 211, 238, 0.44);
+      color: var(--cyan-bright);
+      font-size: 13.5px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+    .home-back-link:hover {
+      background: rgba(34, 211, 238, 0.22);
+      border-color: var(--cyan-bright);
+      transform: translateY(-1px);
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    /* =========================================================================
+       5. MAIN SCENE VIEWPORT SAFE ZONE (y: 78..540px -> height 462px)
+       ========================================================================= */
+    #scenes-layer {
+      position: absolute;
+      top: 76px;
+      left: 36px;
+      width: 1208px;
+      height: 464px;
+      z-index: 10;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: none;
+      opacity: 0;
+      transform: scale(0.985);
+      pointer-events: none;
+    }
+
+    .scene.active {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .scene.exiting {
+      display: block;
+      animation: sceneExit 0.45s ease-in forwards;
+    }
+
+    .scene-camera {
+      width: 100%;
+      height: 100%;
+      transform-origin: center center;
+      will-change: transform;
+    }
+
+    @keyframes sceneEnter {
+      from { opacity: 0; transform: scale(0.975) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes sceneExit {
+      from { opacity: 1; transform: scale(1); }
+      to   { opacity: 0; transform: scale(1.018); }
+    }
+
+    /* =========================================================================
+       6. SHARED MOTION GRAPHICS ANIMATIONS & CHARACTER RIGS
+       ========================================================================= */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50%      { transform: translateY(-7px); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.75; filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.4)); }
+      50%      { opacity: 1;    filter: drop-shadow(0 0 16px rgba(34, 211, 238, 0.85)); }
+    }
+
+    @keyframes dashFlow {
+      to { stroke-dashoffset: -48; }
+    }
+
+    @keyframes dashFlowReverse {
+      to { stroke-dashoffset: 48; }
+    }
+
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    @keyframes spinReverse {
+      from { transform: rotate(360deg); }
+      to   { transform: rotate(0deg); }
+    }
+
+    /* Character articulated micro-animations */
+    @keyframes charHeadNod {
+      0%, 100% { transform: rotate(0deg); }
+      35%      { transform: rotate(2.6deg); }
+      70%      { transform: rotate(-1.8deg); }
+    }
+
+    @keyframes charBreathe {
+      0%, 100% { transform: scaleY(1); }
+      50%      { transform: scaleY(1.018); }
+    }
+
+    @keyframes charTypeLeft {
+      0%, 100% { transform: rotate(0deg) translateY(0px); }
+      25%      { transform: rotate(-4deg) translateY(-2.5px); }
+      55%      { transform: rotate(2deg) translateY(1px); }
+      80%      { transform: rotate(-3deg) translateY(-1.5px); }
+    }
+
+    @keyframes charTypeRight {
+      0%, 100% { transform: rotate(0deg) translateY(0px); }
+      30%      { transform: rotate(3.5deg) translateY(-2px); }
+      65%      { transform: rotate(-2.5deg) translateY(1px); }
+    }
+
+    @keyframes charBlink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      96%           { transform: scaleY(0.1); }
+    }
+
+    @keyframes charMouseHand {
+      0%, 100% { transform: translate(0px, 0px); }
+      40%      { transform: translate(-5px, -2px); }
+      75%      { transform: translate(4px, 1px); }
+    }
+
+    @keyframes ledBlink {
+      0%, 100% { opacity: 0.35; }
+      50%      { opacity: 1; }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .anim-float      { animation: floatSlow 4.2s ease-in-out infinite; }
+    .anim-pulse      { animation: pulseGlow 2.8s ease-in-out infinite; }
+    .anim-dash       { stroke-dasharray: 8 8; animation: dashFlow 1.6s linear infinite; }
+    .anim-dash-rev   { stroke-dasharray: 8 8; animation: dashFlowReverse 1.6s linear infinite; }
+    .anim-spin       { transform-box: fill-box; transform-origin: center; animation: spinSlow 9s linear infinite; }
+    .anim-spin-rev   { transform-box: fill-box; transform-origin: center; animation: spinReverse 7s linear infinite; }
+
+    .char-head       { transform-box: fill-box; transform-origin: 50% 85%; animation: charHeadNod 4.4s ease-in-out infinite; }
+    .char-torso      { transform-box: fill-box; transform-origin: 50% 100%; animation: charBreathe 3.8s ease-in-out infinite; }
+    .char-arm-l      { transform-box: fill-box; transform-origin: 85% 20%; animation: charTypeLeft 1.2s ease-in-out infinite; }
+    .char-arm-r      { transform-box: fill-box; transform-origin: 15% 20%; animation: charTypeRight 1.05s ease-in-out infinite; }
+    .char-eyes       { transform-box: fill-box; transform-origin: center; animation: charBlink 4.6s ease-in-out infinite; }
+    .char-mouse      { transform-box: fill-box; transform-origin: center; animation: charMouseHand 3.2s ease-in-out infinite; }
+    .led-1           { animation: ledBlink 1.3s ease-in-out infinite; }
+    .led-2           { animation: ledBlink 1.9s ease-in-out 0.4s infinite; }
+    .led-3           { animation: ledBlink 1.5s ease-in-out 0.8s infinite; }
+
+    /* Glassmorphic UI Cards inside scenes */
+    .mg-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-cyan);
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(8px);
+    }
+
+    /* =========================================================================
+       7. SCENE-SPECIFIC LAYOUTS (MATHEMATICALLY FITTED TO 1208x464)
+       ========================================================================= */
+
+    /* --- SCENE 1: INTRO --- */
+    .s1-grid {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .s1-problem-badge {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: rgba(15, 32, 66, 0.92);
+      border: 1px solid rgba(34, 211, 238, 0.48);
+      color: var(--cyan-bright);
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 0 28px rgba(34, 211, 238, 0.2);
+      opacity: 0;
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .s1-problem-badge.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* --- SCENE 2: DEFINITION --- */
+    .s2-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      padding: 6px 10px 4px;
+    }
+    .s2-hero-svg {
+      width: 1080px;
+      height: 292px;
+    }
+    .s2-uses {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 1060px;
+    }
+    .s2-use-card {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.4s ease;
+    }
+    .s2-use-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .s2-use-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(34, 211, 238, 0.14);
+      border: 1px solid rgba(34, 211, 238, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .s2-use-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .s2-use-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* --- SCENE 3: CORE COMPONENTS --- */
+    .s3-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .s3-svg {
+      width: 100%;
+      height: 100%;
+    }
+    .comp-node {
+      transition: opacity 0.45s ease, filter 0.45s ease;
+      opacity: 0.35;
+    }
+    .comp-node.revealed {
+      opacity: 1;
+    }
+    .comp-node.highlighted {
+      opacity: 1;
+      filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.72));
+    }
+
+    /* --- SCENE 4: DEPLOYMENT JOURNEY --- */
+    .s4-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+    .s4-svg {
+      width: 1208px;
+      height: 368px;
+    }
+    .s4-stage-bar {
+      width: 920px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-color: rgba(34, 211, 238, 0.48);
+    }
+    .s4-stage-tag {
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.18);
+      color: var(--cyan-bright);
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .s4-stage-desc {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+      text-align: right;
+    }
+
+    /* --- SCENE 5: PRACTICAL STEPS --- */
+    .s5-wrap {
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      gap: 24px;
+      height: 100%;
+      padding: 4px 4px;
+    }
+    .s5-steps {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .s5-step {
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(10, 25, 54, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0.48;
+      transition: all 0.4s ease;
+    }
+    .s5-step.done {
+      opacity: 0.85;
+      border-color: rgba(16, 185, 129, 0.42);
+    }
+    .s5-step.active {
+      opacity: 1;
+      background: rgba(14, 41, 84, 0.94);
+      border-color: var(--cyan);
+      box-shadow: 0 0 22px rgba(34, 211, 238, 0.22);
+      transform: translateX(-4px);
+    }
+    .s5-num {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.22);
+      border: 1px solid rgba(96, 165, 250, 0.5);
+      color: var(--cyan-bright);
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .s5-step.done .s5-num {
+      background: rgba(16, 185, 129, 0.22);
+      border-color: var(--emerald);
+      color: #6ee7b7;
+    }
+    .s5-step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .s5-step-sub {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    /* Simulated GitHub Mockup Window */
+    .gh-window {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.36);
+      border-radius: 14px;
+      background: #0a1428;
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.55);
+      direction: ltr;
+    }
+    .gh-topbar {
+      height: 40px;
+      background: #0f1d38;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 10px;
+    }
+    .gh-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .gh-url {
+      margin-left: 10px;
+      flex: 1;
+      background: rgba(4, 11, 24, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--cyan-bright);
+    }
+    .gh-tabs {
+      display: flex;
+      gap: 18px;
+      padding: 10px 20px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .gh-tab {
+      padding: 0 4px 8px;
+      border-bottom: 2px solid transparent;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .gh-tab.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--cyan);
+    }
+    .gh-body {
+      flex: 1;
+      padding: 18px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .gh-view {
+      position: absolute;
+      inset: 18px 22px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      pointer-events: none;
+    }
+    .gh-view.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .gh-input {
+      background: rgba(4, 11, 24, 0.86);
+      border: 1px solid rgba(56, 189, 248, 0.38);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-primary);
+      margin-top: 6px;
+    }
+    .gh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 700;
+      margin-top: 14px;
+      box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+    }
+    .gh-codebox {
+      background: #060e1f;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.65;
+      color: #e2e8f0;
+      margin-top: 10px;
+    }
+    .gh-settings-layout {
+      display: grid;
+      grid-template-columns: 165px 1fr;
+      gap: 18px;
+      height: 100%;
+    }
+    .gh-sidebar {
+      border-right: 1px solid rgba(148, 163, 184, 0.16);
+      padding-right: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .gh-side-item {
+      padding: 7px 10px;
+      border-radius: 6px;
+    }
+    .gh-side-item.active {
+      background: rgba(34, 211, 238, 0.16);
+      color: var(--cyan-bright);
+      font-weight: 700;
+      border-left: 3px solid var(--cyan);
+    }
+    .gh-deploy-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.18);
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    .gh-deploy-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue), var(--cyan), var(--emerald));
+      border-radius: 999px;
+    }
+    .gh-live-banner {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: #a7f3d0;
+      font-size: 13.5px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: all 0.45s ease;
+    }
+    .gh-live-banner.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* --- SCENE 6: BEHIND THE SCENES --- */
+    .s6-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .s6-note-banner {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 7px 22px;
+      border-radius: 999px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.42);
+      color: #e9d5ff;
+      font-size: 14.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* --- SCENE 7: PROS & LIMITATIONS --- */
+    .s7-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      height: 100%;
+      padding: 6px 12px;
+    }
+    .s7-col {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .s7-col.pros {
+      border-color: rgba(34, 211, 238, 0.42);
+      background: linear-gradient(160deg, rgba(10, 32, 66, 0.9), rgba(8, 22, 46, 0.88));
+    }
+    .s7-col.cons {
+      border-color: rgba(168, 85, 247, 0.42);
+      background: linear-gradient(160deg, rgba(28, 17, 56, 0.88), rgba(11, 20, 44, 0.9));
+    }
+    .s7-col-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    }
+    .s7-col-title {
+      font-size: 21px;
+      font-weight: 800;
+    }
+    .s7-col.pros .s7-col-title { color: var(--cyan-bright); }
+    .s7-col.cons .s7-col-title { color: #d8b4fe; }
+    .s7-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      flex: 1;
+      justify-content: center;
+    }
+    .s7-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(5, 13, 30, 0.56);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      opacity: 0;
+      transform: translateX(14px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+    .s7-item.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .s7-bullet {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .s7-col.pros .s7-bullet {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.45);
+    }
+    .s7-col.cons .s7-bullet {
+      background: rgba(251, 113, 133, 0.18);
+      color: #fda4af;
+      border: 1px solid rgba(251, 113, 133, 0.45);
+    }
+
+    /* --- SCENE 8: OUTRO --- */
+    .s8-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .s8-quote {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-shadow: 0 4px 28px rgba(34, 211, 238, 0.42);
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      z-index: 2;
+    }
+    .s8-quote.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .s8-brand-block {
+      padding: 20px 44px;
+      border-radius: 18px;
+      background: rgba(9, 24, 52, 0.86);
+      border: 1px solid rgba(34, 211, 238, 0.48);
+      box-shadow: 0 0 48px rgba(34, 211, 238, 0.22);
+      opacity: 0;
+      transform: scale(0.94);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      z-index: 2;
+    }
+    .s8-brand-block.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .s8-brand-title {
+      font-size: 40px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #ffffff 0%, #67e8f9 55%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.6px;
+    }
+    .s8-brand-sub {
+      margin-top: 6px;
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.8px;
+    }
+
+    /* =========================================================================
+       8. SYNCHRONIZED NARRATION CAPTION ZONE (y: 548..642px)
+       ========================================================================= */
+    .caption-zone {
+      position: absolute;
+      bottom: 76px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1080px;
+      min-height: 82px;
+      padding: 14px 30px;
+      border-radius: 14px;
+      background: rgba(4, 12, 28, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 25;
+      pointer-events: none;
+    }
+
+    #caption-text {
+      font-size: 21px;
+      line-height: 1.55;
+      font-weight: 600;
+      color: var(--text-primary);
+      transition: opacity 0.3s ease;
+    }
+
+    /* =========================================================================
+       9. MINIMAL 3-CONTROL BAR (STRICTLY: PLAY/PAUSE, TIMELINE, FULLSCREEN)
+       ========================================================================= */
+    .control-bar {
+      position: absolute;
+      bottom: 14px;
+      left: 36px;
+      right: 36px;
+      height: 50px;
+      padding: 0 16px;
+      border-radius: 12px;
+      background: rgba(6, 15, 34, 0.92);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      z-index: 30;
+    }
+
+    .ctrl-btn {
+      height: 36px;
+      min-width: 118px;
+      padding: 0 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(34, 211, 238, 0.45);
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(37, 99, 235, 0.28));
+      color: var(--text-primary);
+      font-family: var(--font-ar);
+      font-size: 14.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .ctrl-btn:hover {
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.34), rgba(59, 130, 246, 0.42));
+      border-color: var(--cyan-bright);
+    }
+
+    .ctrl-btn:focus-visible {
+      outline: 2px solid var(--cyan-bright);
+      outline-offset: 2px;
+    }
+
+    .ctrl-btn-icon {
+      min-width: 44px;
+      padding: 0 10px;
+    }
+
+    /* Non-interactive Timeline Progress Indicator (Control #3) */
+    .timeline-indicator {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      pointer-events: none; /* Strictly non-interactive per spec */
+    }
+
+    .timeline-track {
+      flex: 1;
+      height: 10px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .tl-seg {
+      position: relative;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.2);
+      overflow: hidden;
+    }
+
+    .tl-seg-fill {
+      position: absolute;
+      top: 0;
+      right: 0; /* RTL fill direction */
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(270deg, var(--blue), var(--cyan));
+      border-radius: 999px;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.55);
+    }
+
+    .timeline-clock {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--cyan-bright);
+      white-space: nowrap;
+      direction: ltr;
+      unicode-bidi: isolate;
+      min-width: 96px;
+      text-align: center;
+    }
+
+    /* =========================================================================
+       10. START OVERLAY & END OVERLAY (CINEMATIC, CLEAN)
+       ========================================================================= */
+    .stage-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 28;
+      background: radial-gradient(circle at 50% 42%, rgba(9, 27, 60, 0.94) 0%, rgba(4, 11, 24, 0.97) 78%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 80px 90px;
+      transition: opacity 0.55s ease, visibility 0.55s ease;
+    }
+
+    .stage-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .intro-kicker {
+      padding: 6px 18px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.14);
+      border: 1px solid rgba(34, 211, 238, 0.42);
+      color: var(--cyan-bright);
+      font-size: 14.5px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .intro-title {
+      font-size: 46px;
+      font-weight: 800;
+      line-height: 1.25;
+      background: linear-gradient(90deg, #ffffff 0%, #67e8f9 55%, #60a5fa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .intro-subtitle {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .intro-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 28px;
+    }
+
+    .intro-hint {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 14px;
+    }
+
+    /* Full Script Overlay (toggled cleanly via keyboard 'T' without cluttering HUD) */
+    #transcript-modal {
+      position: absolute;
+      inset: 28px 60px 76px;
+      z-index: 40;
+      background: rgba(5, 13, 30, 0.96);
+      border: 1px solid rgba(34, 211, 238, 0.45);
+      border-radius: 16px;
+      padding: 24px 32px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8);
+    }
+
+    #transcript-modal.open {
+      display: flex;
+    }
+
+    .transcript-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      padding-bottom: 10px;
+    }
+
+    .transcript-body {
+      overflow-y: auto;
+      padding-left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      user-select: text;
+    }
+
+    .transcript-scene-title {
+      color: var(--cyan-bright);
+      font-weight: 700;
+      font-size: 16.5px;
+      margin-bottom: 2px;
+    }
+
+    /* =========================================================================
+       11. REDUCED MOTION ACCESSIBILITY (PRESERVES FULL 165s TIMELINE)
+       ========================================================================= */
+    @media (prefers-reduced-motion: reduce) {
+      .anim-float, .anim-pulse, .anim-dash, .anim-dash-rev,
+      .anim-spin, .anim-spin-rev,
+      .char-head, .char-torso, .char-arm-l, .char-arm-r,
+      .char-eyes, .char-mouse, .led-1, .led-2, .led-3 {
+        animation: none !important;
+      }
+      .scene.active {
+        animation: none !important;
+      }
+      .scene-camera {
+        transform: none !important;
+      }
+      #particle-canvas {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="cinema-shell">
+    <main id="stage" class="is-paused" aria-label="فيلم موشن جرافيك تعليمي عن GitHub Pages">
+      <!-- Ambient Backdrop -->
+      <div class="ambient-grid" aria-hidden="true"></div>
+      <canvas id="particle-canvas" width="1280" height="720" aria-hidden="true"></canvas>
+
+      <!-- Top Header Safe Zone -->
+      <header class="stage-header">
+        <div class="scene-meta">
+          <span class="scene-pill" id="hdr-scene-num">المشهد <span class="ltr" dir="ltr">01 / 08</span></span>
+          <h1 class="scene-heading" id="hdr-scene-title">المقدمة</h1>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <a href="index.html" class="home-back-link" aria-label="العودة إلى المنصة التعليمية الرئيسية">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>العودة للمنصة</span>
+          </a>
+          <div class="brand-tag">
+            <span class="brand-dot"></span>
+            <span class="ltr" dir="ltr">GitHub Pages • Cloud Computing</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Visual Scenes Layer (1208 × 464 safe zone) -->
+      <section id="scenes-layer" aria-live="off">
+
+        <!-- ===================================================================
+             SCENE 1: المقدمة (0s – 15s)
+             =================================================================== -->
+        <article class="scene" id="scene-0" data-scene="0">
+          <div class="scene-camera" id="cam-0">
+            <div class="s1-grid">
+              <div class="s1-problem-badge" id="s1-badge">كيف ننشر الموقع للعالم دون شراء استضافة تقليدية أو إدارة خادم؟</div>
+              <svg viewBox="0 0 1208 464" width="1208" height="464" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="مطور برمجيات أمام حاسوبه يفكر في نشر موقعه على الإنترنت">
+                <defs>
+                  <linearGradient id="gCyan" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#22d3ee"/>
+                    <stop offset="100%" stop-color="#3b82f6"/>
+                  </linearGradient>
+                  <linearGradient id="gPurple" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#a855f7"/>
+                    <stop offset="100%" stop-color="#3b82f6"/>
+                  </linearGradient>
+                  <linearGradient id="gDesk" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#173261"/>
+                    <stop offset="100%" stop-color="#0b1a36"/>
+                  </linearGradient>
+                  <filter id="softGlow" x="-25%" y="-25%" width="150%" height="150%">
+                    <feGaussianBlur stdDeviation="6" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+
+                <!-- Left Side: Cloud / Internet Destination & Traditional Hosting Challenge -->
+                <g transform="translate(88, 92)">
+                  <!-- Glowing Cloud -->
+                  <g class="anim-float">
+                    <path d="M90 148 C48 148 20 122 20 88 C20 58 42 35 72 32 C84 10 112 0 142 6 C172 12 195 34 200 62 C228 66 248 86 248 112 C248 134 228 148 202 148 Z"
+                          fill="rgba(14, 42, 86, 0.85)" stroke="#22d3ee" stroke-width="2.5" filter="url(#softGlow)"/>
+                    <!-- Globe inside Cloud -->
+                    <circle cx="134" cy="84" r="34" fill="none" stroke="#67e8f9" stroke-width="1.8" opacity="0.85"/>
+                    <ellipse cx="134" cy="84" rx="16" ry="34" fill="none" stroke="#67e8f9" stroke-width="1.4" opacity="0.7"/>
+                    <line x1="100" y1="84" x2="168" y2="84" stroke="#67e8f9" stroke-width="1.4" opacity="0.7"/>
+                    <line x1="106" y1="67" x2="162" y2="67" stroke="#67e8f9" stroke-width="1.2" opacity="0.5"/>
+                    <line x1="106" y1="101" x2="162" y2="101" stroke="#67e8f9" stroke-width="1.2" opacity="0.5"/>
+                    <text x="134" y="176" text-anchor="middle" fill="#cbd5e1" font-size="16" font-weight="700">الإنترنت والعالم</text>
+                  </g>
+
+                  <!-- Traditional Server Burden Card (fades in mid-scene) -->
+                  <g id="s1-burden" transform="translate(18, 212)" opacity="0">
+                    <rect x="0" y="0" width="246" height="104" rx="12" fill="rgba(26, 17, 46, 0.86)" stroke="rgba(251, 113, 133, 0.5)" stroke-width="1.8"/>
+                    <!-- Mini Server Rack -->
+                    <rect x="20" y="20" width="52" height="64" rx="6" fill="#101d3b" stroke="#94a3b8" stroke-width="1.5"/>
+                    <line x1="28" y1="36" x2="64" y2="36" stroke="#64748b" stroke-width="2"/>
+                    <line x1="28" y1="52" x2="64" y2="52" stroke="#64748b" stroke-width="2"/>
+                    <line x1="28" y1="68" x2="64" y2="68" stroke="#64748b" stroke-width="2"/>
+                    <circle cx="32" cy="28" r="2.5" fill="#fb7185" class="led-1"/>
+                    <circle cx="32" cy="44" r="2.5" fill="#f59e0b" class="led-2"/>
+                    <!-- Cross over server -->
+                    <line x1="16" y1="16" x2="76" y2="88" stroke="#fb7185" stroke-width="3" stroke-linecap="round"/>
+                    <text x="160" y="44" text-anchor="middle" fill="#fda4af" font-size="15" font-weight="700">استضافة تقليدية</text>
+                    <text x="160" y="68" text-anchor="middle" fill="#cbd5e1" font-size="13">تكلفة + إعداد + إدارة خادم</text>
+                  </g>
+                </g>
+
+                <!-- Center Disconnected Bridge & Question Pulse -->
+                <g transform="translate(362, 198)">
+                  <path d="M0 32 C90 32, 130 32, 310 32" fill="none" stroke="rgba(56, 189, 248, 0.35)" stroke-width="3" stroke-dasharray="10 10"/>
+                  <g transform="translate(155, 32)"><g class="anim-pulse">
+                    <circle r="34" fill="rgba(11, 28, 60, 0.95)" stroke="#22d3ee" stroke-width="2.4"/>
+                    <text x="0" y="11" text-anchor="middle" fill="#67e8f9" font-size="34" font-weight="800">؟</text>
+                  </g></g>
+                </g>
+
+                <!-- Right Side: Articulated Vector Developer Character at Workstation -->
+                <g transform="translate(690, 96)">
+                  <!-- Ambient Screen Glow -->
+                  <ellipse cx="145" cy="180" rx="135" ry="95" fill="rgba(34, 211, 238, 0.08)"/>
+
+                  <!-- Desk Surface (Pseudo-3D) -->
+                  <polygon points="10,275 430,275 456,306 -16,306" fill="url(#gDesk)" stroke="rgba(56, 189, 248, 0.3)" stroke-width="1.5"/>
+                  <rect x="24" y="306" width="16" height="44" fill="#0b1a36"/>
+                  <rect x="400" y="306" width="16" height="44" fill="#0b1a36"/>
+
+                  <!-- Developer Computer Monitor -->
+                  <g transform="translate(26, 128)">
+                    <rect x="0" y="0" width="196" height="122" rx="10" fill="#071226" stroke="#38bdf8" stroke-width="2.2"/>
+                    <rect x="10" y="10" width="176" height="96" rx="5" fill="#040b18"/>
+                    <!-- Code lines on screen -->
+                    <rect x="20" y="22" width="76" height="7" rx="3" fill="#22d3ee" opacity="0.9"/>
+                    <rect x="28" y="38" width="112" height="6" rx="3" fill="#60a5fa" opacity="0.8"/>
+                    <rect x="28" y="52" width="94" height="6" rx="3" fill="#a855f7" opacity="0.8"/>
+                    <rect x="20" y="66" width="132" height="6" rx="3" fill="#38bdf8" opacity="0.65"/>
+                    <rect x="20" y="80" width="66" height="6" rx="3" fill="#10b981" opacity="0.85"/>
+                    <!-- Monitor Stand -->
+                    <rect x="86" y="122" width="24" height="22" fill="#1e3a6d"/>
+                    <rect x="58" y="142" width="80" height="8" rx="4" fill="#2563eb"/>
+                  </g>
+
+                  <!-- Floating Local Files above Computer -->
+                  <g transform="translate(34, 52)"><g class="anim-float">
+                    <rect x="0" y="0" width="54" height="58" rx="8" fill="#0e254d" stroke="#22d3ee" stroke-width="1.8"/>
+                    <text x="27" y="35" text-anchor="middle" fill="#67e8f9" font-size="13" font-family="monospace" font-weight="700">HTML</text>
+                  </g></g>
+                  <g transform="translate(100, 38)"><g class="anim-float" style="animation-delay: 0.6s">
+                    <rect x="0" y="0" width="54" height="58" rx="8" fill="#0e254d" stroke="#60a5fa" stroke-width="1.8"/>
+                    <text x="27" y="35" text-anchor="middle" fill="#93c5fd" font-size="13" font-family="monospace" font-weight="700">CSS</text>
+                  </g></g>
+                  <g transform="translate(166, 52)"><g class="anim-float" style="animation-delay: 1.1s">
+                    <rect x="0" y="0" width="54" height="58" rx="8" fill="#0e254d" stroke="#a855f7" stroke-width="1.8"/>
+                    <text x="27" y="35" text-anchor="middle" fill="#d8b4fe" font-size="13" font-family="monospace" font-weight="700">JS</text>
+                  </g></g>
+
+                  <!-- Keyboard -->
+                  <polygon points="154,264 246,264 236,274 146,274" fill="#1e3a6d" stroke="#38bdf8" stroke-width="1"/>
+
+                  <!-- ARTICULATED DEVELOPER CHARACTER (Seated Right, Facing Monitor) -->
+                  <g id="dev-char-s1" transform="translate(268, 92)">
+                    <!-- Chair Back -->
+                    <rect x="74" y="64" width="22" height="114" rx="10" fill="#11264d" stroke="#334155" stroke-width="2"/>
+                    <rect x="24" y="176" width="84" height="14" rx="7" fill="#11264d"/>
+                    <rect x="60" y="190" width="12" height="58" fill="#1e293b"/>
+
+                    <!-- Torso (Breathing) -->
+                    <g class="char-torso">
+                      <path d="M24 88 C24 68 78 68 80 88 L86 176 L18 176 Z" fill="url(#gCyan)" stroke="#67e8f9" stroke-width="1.5"/>
+                      <!-- Hoodie / Collar Detail -->
+                      <path d="M38 78 L52 94 L66 78" fill="none" stroke="#08152e" stroke-width="2.5" stroke-linecap="round"/>
+                    </g>
+
+                    <!-- Head (Nodding & Blinking) -->
+                    <g class="char-head">
+                      <!-- Neck -->
+                      <rect x="44" y="54" width="16" height="22" rx="6" fill="#f1c29b"/>
+                      <!-- Face -->
+                      <circle cx="50" cy="34" r="27" fill="#f5cba7"/>
+                      <!-- Hair -->
+                      <path d="M23 30 C23 8 76 4 78 30 C72 19 60 15 44 16 C32 17 26 24 23 30 Z" fill="#0f172a"/>
+                      <!-- Glasses -->
+                      <rect x="27" y="28" width="16" height="11" rx="3" fill="rgba(34,211,238,0.18)" stroke="#0f172a" stroke-width="2"/>
+                      <line x1="43" y1="33" x2="48" y2="33" stroke="#0f172a" stroke-width="2"/>
+                      <!-- Eyes (blinking) -->
+                      <g class="char-eyes">
+                        <circle cx="35" cy="33.5" r="2.2" fill="#0f172a"/>
+                      </g>
+                      <!-- Subtle mouth -->
+                      <path d="M34 47 Q40 49 45 46" fill="none" stroke="#9a6b4c" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+
+                    <!-- Back Arm (Typing) -->
+                    <g class="char-arm-l">
+                      <path d="M32 104 L-18 148 L-54 168" fill="none" stroke="#1d4ed8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="-58" cy="170" r="7" fill="#f5cba7"/>
+                    </g>
+
+                    <!-- Front Arm (Typing) -->
+                    <g class="char-arm-r">
+                      <path d="M46 108 L-6 154 L-44 174" fill="none" stroke="#22d3ee" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="-48" cy="175" r="7.5" fill="#f5cba7"/>
+                    </g>
+                  </g>
+
+                  <text x="235" y="346" text-anchor="middle" fill="#67e8f9" font-size="16" font-weight="700">المطوّر — موقع جاهز محلياً</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===================================================================
+             SCENE 2: التعريف بالخدمة (15s – 35s)
+             =================================================================== -->
+        <article class="scene" id="scene-1" data-scene="1">
+          <div class="scene-camera" id="cam-1">
+            <div class="s2-wrap">
+              <svg class="s2-hero-svg" viewBox="0 0 1080 292" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="تعريف خدمة GitHub Pages واستضافة ملفات HTML وCSS وJavaScript">
+                <defs>
+                  <linearGradient id="s2Card" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#0f2957"/>
+                    <stop offset="100%" stop-color="#091732"/>
+                  </linearGradient>
+                </defs>
+
+                <!-- Left: GitHub Repository Vault -->
+                <g transform="translate(46, 54)">
+                  <rect x="0" y="0" width="236" height="176" rx="16" fill="url(#s2Card)" stroke="#38bdf8" stroke-width="2.2"/>
+                  <rect x="0" y="0" width="236" height="40" rx="16" fill="rgba(34, 211, 238, 0.14)"/>
+                  <!-- Git Branch Icon -->
+                  <circle cx="34" cy="20" r="6" fill="none" stroke="#67e8f9" stroke-width="2.2"/>
+                  <line x1="34" y1="26" x2="34" y2="33" stroke="#67e8f9" stroke-width="2.2"/>
+                  <text x="130" y="25" text-anchor="middle" fill="#f8fafc" font-size="14.5" font-weight="700" font-family="monospace">GitHub Repository</text>
+
+                  <!-- Source Files inside Repo -->
+                  <g transform="translate(22, 60)">
+                    <rect x="0" y="0" width="192" height="28" rx="6" fill="rgba(4,11,24,0.75)" stroke="rgba(34,211,238,0.35)"/>
+                    <text x="18" y="19" fill="#67e8f9" font-size="13" font-family="monospace">&lt;&gt; index.html</text>
+                  </g>
+                  <g transform="translate(22, 98)">
+                    <rect x="0" y="0" width="192" height="28" rx="6" fill="rgba(4,11,24,0.75)" stroke="rgba(96,165,250,0.35)"/>
+                    <text x="18" y="19" fill="#93c5fd" font-size="13" font-family="monospace">{} style.css</text>
+                  </g>
+                  <g transform="translate(22, 136)">
+                    <rect x="0" y="0" width="192" height="28" rx="6" fill="rgba(4,11,24,0.75)" stroke="rgba(168,85,247,0.35)"/>
+                    <text x="18" y="19" fill="#d8b4fe" font-size="13" font-family="monospace">JS script.js</text>
+                  </g>
+                </g>
+
+                <!-- Flow Line 1: Repo -> Cloud -->
+                <path id="s2-path-1" d="M286 142 C335 142, 355 142, 410 142" fill="none" stroke="#22d3ee" stroke-width="3" class="anim-dash"/>
+                <circle id="s2-pkt-1" r="6" fill="#67e8f9" filter="url(#softGlow)"/>
+
+                <!-- Center: GitHub Pages Cloud Portal -->
+                <g transform="translate(414, 34)"><g class="anim-float">
+                  <path d="M84 190 C34 190 0 158 0 116 C0 80 26 52 62 48 C76 18 110 4 148 12 C186 20 212 46 220 80 C254 84 278 108 278 140 C278 170 252 190 218 190 Z"
+                        fill="rgba(12, 36, 78, 0.92)" stroke="#22d3ee" stroke-width="2.8" filter="url(#softGlow)"/>
+                  <text x="139" y="102" text-anchor="middle" fill="#ffffff" font-size="25" font-weight="800" font-family="Segoe UI, Arial, sans-serif">GitHub Pages</text>
+                  <text x="139" y="132" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="700" font-family="monospace">Static Cloud Hosting</text>
+                  <!-- 3 Static Tech Pills -->
+                  <g transform="translate(32, 148)">
+                    <rect x="0" y="0" width="64" height="24" rx="12" fill="rgba(34,211,238,0.2)" stroke="#22d3ee"/>
+                    <text x="32" y="16" text-anchor="middle" fill="#67e8f9" font-size="12" font-family="monospace" font-weight="700">HTML</text>
+                    <rect x="74" y="0" width="64" height="24" rx="12" fill="rgba(59,130,246,0.22)" stroke="#60a5fa"/>
+                    <text x="106" y="16" text-anchor="middle" fill="#93c5fd" font-size="12" font-family="monospace" font-weight="700">CSS</text>
+                    <rect x="148" y="0" width="64" height="24" rx="12" fill="rgba(168,85,247,0.22)" stroke="#a855f7"/>
+                    <text x="180" y="16" text-anchor="middle" fill="#d8b4fe" font-size="12" font-family="monospace" font-weight="700">JS</text>
+                  </g>
+                </g></g>
+
+                <!-- Flow Line 2: Cloud -> Live Website -->
+                <path id="s2-path-2" d="M698 142 C745 142, 765 142, 816 142" fill="none" stroke="#10b981" stroke-width="3" class="anim-dash"/>
+                <circle id="s2-pkt-2" r="6" fill="#6ee7b7" filter="url(#softGlow)"/>
+
+                <!-- Right: Published Browser Website -->
+                <g transform="translate(820, 54)">
+                  <rect x="0" y="0" width="224" height="176" rx="14" fill="url(#s2Card)" stroke="#10b981" stroke-width="2.2"/>
+                  <rect x="0" y="0" width="224" height="34" rx="14" fill="rgba(16, 185, 129, 0.14)"/>
+                  <!-- HTTPS Lock -->
+                  <rect x="18" y="13" width="12" height="10" rx="2" fill="#10b981"/>
+                  <path d="M20 13 V10 A4 4 0 0 1 28 10 V13" fill="none" stroke="#6ee7b7" stroke-width="1.8"/>
+                  <text x="124" y="21" text-anchor="middle" fill="#a7f3d0" font-size="12" font-family="monospace">https://user.github.io</text>
+                  <!-- Mini Website Layout -->
+                  <rect x="18" y="48" width="188" height="38" rx="7" fill="rgba(34,211,238,0.16)" stroke="rgba(34,211,238,0.35)"/>
+                  <rect x="30" y="59" width="96" height="8" rx="4" fill="#67e8f9"/>
+                  <rect x="30" y="72" width="60" height="5" rx="2.5" fill="#94a3b8"/>
+                  <rect x="18" y="98" width="88" height="60" rx="7" fill="rgba(59,130,246,0.14)" stroke="rgba(59,130,246,0.28)"/>
+                  <rect x="118" y="98" width="88" height="60" rx="7" fill="rgba(168,85,247,0.14)" stroke="rgba(168,85,247,0.28)"/>
+                </g>
+              </svg>
+
+              <!-- 3 Ideal Use-Case Cards -->
+              <div class="s2-uses">
+                <div class="mg-card s2-use-card" id="s2-u1">
+                  <div class="s2-use-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  </div>
+                  <div>
+                    <div class="s2-use-title">مواقع التعريف الشخصية</div>
+                    <div class="s2-use-sub">السير الذاتية ومعارض الأعمال (<span class="ltr" dir="ltr">Portfolios</span>)</div>
+                  </div>
+                </div>
+                <div class="mg-card s2-use-card" id="s2-u2">
+                  <div class="s2-use-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                  </div>
+                  <div>
+                    <div class="s2-use-title">صفحات التوثيق التقني</div>
+                    <div class="s2-use-sub">أدلة المكتبات والمشاريع (<span class="ltr" dir="ltr">Documentation</span>)</div>
+                  </div>
+                </div>
+                <div class="mg-card s2-use-card" id="s2-u3">
+                  <div class="s2-use-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                  </div>
+                  <div>
+                    <div class="s2-use-title">المشاريع الشخصية والأكاديمية</div>
+                    <div class="s2-use-sub">عرض نماذج الويب الثابتة بسرعة وموثوقية</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===================================================================
+             SCENE 3: المكونات الأساسية (35s – 55s)
+             =================================================================== -->
+        <article class="scene" id="scene-2" data-scene="2">
+          <div class="scene-camera" id="cam-2">
+            <div class="s3-wrap">
+              <svg class="s3-svg" viewBox="0 0 1208 464" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="المكونات الستة الأساسية في GitHub Pages وعلاقتها المترابطة">
+                <!-- Animated Connectors between the 6 Components (Row 1 Right->Left, drop to Row 2 Left->Right) -->
+                <path d="M846 122 L750 122" fill="none" stroke="#22d3ee" stroke-width="2.6" class="anim-dash-rev"/>
+                <path d="M460 122 L364 122" fill="none" stroke="#22d3ee" stroke-width="2.6" class="anim-dash-rev"/>
+                <path d="M214 198 L214 268" fill="none" stroke="#60a5fa" stroke-width="2.6" class="anim-dash"/>
+                <path d="M364 342 L460 342" fill="none" stroke="#a855f7" stroke-width="2.6" class="anim-dash"/>
+                <path d="M750 342 L846 342" fill="none" stroke="#10b981" stroke-width="2.6" class="anim-dash"/>
+
+                <!-- Node 1: GitHub Repository (Top Right) -->
+                <g class="comp-node" id="s3-n0" transform="translate(850, 46)">
+                  <rect width="290" height="150" rx="16" fill="rgba(12, 31, 66, 0.92)" stroke="#22d3ee" stroke-width="2.2"/>
+                  <circle cx="248" cy="40" r="18" fill="rgba(34,211,238,0.18)" stroke="#22d3ee"/>
+                  <text x="248" y="46" text-anchor="middle" fill="#67e8f9" font-size="16" font-weight="800">1</text>
+                  <text x="128" y="45" text-anchor="middle" fill="#67e8f9" font-size="17" font-weight="800" font-family="monospace">GitHub Repository</text>
+                  <text x="145" y="84" text-anchor="middle" fill="#f8fafc" font-size="17" font-weight="700">المستودع السحابي</text>
+                  <text x="145" y="114" text-anchor="middle" fill="#cbd5e1" font-size="14">الحاوية الرئيسية التي تحفظ</text>
+                  <text x="145" y="134" text-anchor="middle" fill="#cbd5e1" font-size="14">الشيفرة وسجل التعديلات</text>
+                </g>
+
+                <!-- Node 2: Source Files (Top Center) -->
+                <g class="comp-node" id="s3-n1" transform="translate(460, 46)">
+                  <rect width="290" height="150" rx="16" fill="rgba(12, 31, 66, 0.92)" stroke="#38bdf8" stroke-width="2.2"/>
+                  <circle cx="248" cy="40" r="18" fill="rgba(56,189,248,0.18)" stroke="#38bdf8"/>
+                  <text x="248" y="46" text-anchor="middle" fill="#7dd3fc" font-size="16" font-weight="800">2</text>
+                  <text x="128" y="45" text-anchor="middle" fill="#7dd3fc" font-size="17" font-weight="800" font-family="monospace">Source Files</text>
+                  <text x="145" y="84" text-anchor="middle" fill="#f8fafc" font-size="17" font-weight="700">ملفات المصدر</text>
+                  <text x="145" y="114" text-anchor="middle" fill="#cbd5e1" font-size="14">ملفات الواجهة: HTML وCSS</text>
+                  <text x="145" y="134" text-anchor="middle" fill="#cbd5e1" font-size="14">وJavaScript والصور الثابتة</text>
+                </g>
+
+                <!-- Node 3: Branch (Top Left) -->
+                <g class="comp-node" id="s3-n2" transform="translate(70, 46)">
+                  <rect width="290" height="150" rx="16" fill="rgba(12, 31, 66, 0.92)" stroke="#60a5fa" stroke-width="2.2"/>
+                  <circle cx="248" cy="40" r="18" fill="rgba(96,165,250,0.18)" stroke="#60a5fa"/>
+                  <text x="248" y="46" text-anchor="middle" fill="#93c5fd" font-size="16" font-weight="800">3</text>
+                  <text x="128" y="45" text-anchor="middle" fill="#93c5fd" font-size="17" font-weight="800" font-family="monospace">Branch</text>
+                  <text x="145" y="84" text-anchor="middle" fill="#f8fafc" font-size="17" font-weight="700">الفرع المصدري</text>
+                  <text x="145" y="114" text-anchor="middle" fill="#cbd5e1" font-size="14">مثل main أو gh-pages</text>
+                  <text x="145" y="134" text-anchor="middle" fill="#cbd5e1" font-size="14">لتنظيم النسخة المراد نشرها</text>
+                </g>
+
+                <!-- Node 4: Pages Settings (Bottom Left) -->
+                <g class="comp-node" id="s3-n3" transform="translate(70, 268)">
+                  <rect width="290" height="150" rx="16" fill="rgba(18, 28, 66, 0.92)" stroke="#818cf8" stroke-width="2.2"/>
+                  <circle cx="248" cy="40" r="18" fill="rgba(129,140,248,0.18)" stroke="#818cf8"/>
+                  <text x="248" y="46" text-anchor="middle" fill="#c7d2fe" font-size="16" font-weight="800">4</text>
+                  <text x="128" y="45" text-anchor="middle" fill="#c7d2fe" font-size="17" font-weight="800" font-family="monospace">Pages Settings</text>
+                  <text x="145" y="84" text-anchor="middle" fill="#f8fafc" font-size="17" font-weight="700">إعدادات الخدمة</text>
+                  <text x="145" y="114" text-anchor="middle" fill="#cbd5e1" font-size="14">تحديد مصدر النشر والفرع</text>
+                  <text x="145" y="134" text-anchor="middle" fill="#cbd5e1" font-size="14">وخيار النطاق والتشفير</text>
+                </g>
+
+                <!-- Node 5: Deployment (Bottom Center) -->
+                <g class="comp-node" id="s3-n4" transform="translate(460, 268)">
+                  <rect width="290" height="150" rx="16" fill="rgba(26, 22, 66, 0.92)" stroke="#a855f7" stroke-width="2.2"/>
+                  <circle cx="248" cy="40" r="18" fill="rgba(168,85,247,0.18)" stroke="#a855f7"/>
+                  <text x="248" y="46" text-anchor="middle" fill="#d8b4fe" font-size="16" font-weight="800">5</text>
+                  <text x="128" y="45" text-anchor="middle" fill="#d8b4fe" font-size="17" font-weight="800" font-family="monospace">Deployment</text>
+                  <text x="145" y="84" text-anchor="middle" fill="#f8fafc" font-size="17" font-weight="700">التجهيز والنشر</text>
+                  <text x="145" y="114" text-anchor="middle" fill="#cbd5e1" font-size="14">بناء الملفات الثابتة وتوزيعها</text>
+                  <text x="145" y="134" text-anchor="middle" fill="#cbd5e1" font-size="14">عبر البنية السحابية تلقائياً</text>
+                </g>
+
+                <!-- Node 6: Published Website (Bottom Right) -->
+                <g class="comp-node" id="s3-n5" transform="translate(850, 268)">
+                  <rect width="290" height="150" rx="16" fill="rgba(8, 36, 56, 0.92)" stroke="#10b981" stroke-width="2.4"/>
+                  <circle cx="248" cy="40" r="18" fill="rgba(16,185,129,0.2)" stroke="#10b981"/>
+                  <text x="248" y="46" text-anchor="middle" fill="#6ee7b7" font-size="16" font-weight="800">6</text>
+                  <text x="122" y="45" text-anchor="middle" fill="#6ee7b7" font-size="16.5" font-weight="800" font-family="monospace">Published Website</text>
+                  <text x="145" y="84" text-anchor="middle" fill="#f8fafc" font-size="17" font-weight="700">الموقع المنشور</text>
+                  <text x="145" y="114" text-anchor="middle" fill="#cbd5e1" font-size="14">متاح للجميع عبر رابط HTTPS</text>
+                  <text x="145" y="134" text-anchor="middle" fill="#6ee7b7" font-size="13" font-family="monospace">https://user.github.io</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===================================================================
+             SCENE 4: رحلة النشر (55s – 80s)
+             =================================================================== -->
+        <article class="scene" id="scene-3" data-scene="3">
+          <div class="scene-camera" id="cam-3">
+            <div class="s4-wrap">
+              <svg class="s4-svg" viewBox="0 0 1208 368" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="رحلة انتقال الملفات من المطور حتى متصفح الزائر">
+                <!-- Master Motion Path (Left to Right: Developer -> Repo -> Build -> Published -> Visitor) -->
+                <path id="s4-master-path" d="M126 168 L366 168 L604 168 L842 168 L1082 168" fill="none" stroke="rgba(56, 189, 248, 0.25)" stroke-width="6" stroke-linecap="round"/>
+                <path id="s4-progress-path" d="M126 168 L366 168 L604 168 L842 168 L1082 168" fill="none" stroke="#22d3ee" stroke-width="4" stroke-linecap="round" stroke-dasharray="956" stroke-dashoffset="956"/>
+
+                <!-- Station 1: Developer -->
+                <g id="s4-st0" transform="translate(126, 168)" opacity="0.5">
+                  <circle r="58" fill="#0b1f44" stroke="#38bdf8" stroke-width="2.5"/>
+                  <!-- Mini Dev Icon -->
+                  <circle cx="0" cy="-16" r="14" fill="#f5cba7"/>
+                  <path d="M-22 24 C-22 4 22 4 22 24 Z" fill="#22d3ee"/>
+                  <rect x="-26" y="14" width="52" height="14" rx="4" fill="#0f172a" stroke="#67e8f9" stroke-width="1.5"/>
+                  <text x="0" y="92" text-anchor="middle" fill="#67e8f9" font-size="14.5" font-weight="800" font-family="monospace">Developer</text>
+                  <text x="0" y="114" text-anchor="middle" fill="#e2e8f0" font-size="14.5" font-weight="700">المطوّر</text>
+                </g>
+
+                <!-- Station 2: GitHub Repository -->
+                <g id="s4-st1" transform="translate(366, 168)" opacity="0.5">
+                  <circle r="58" fill="#0b1f44" stroke="#3b82f6" stroke-width="2.5"/>
+                  <rect x="-24" y="-22" width="48" height="44" rx="8" fill="#08152e" stroke="#60a5fa" stroke-width="2"/>
+                  <circle cx="-8" cy="-8" r="4" fill="#22d3ee"/>
+                  <circle cx="10" cy="-8" r="4" fill="#a855f7"/>
+                  <circle cx="-8" cy="10" r="4" fill="#10b981"/>
+                  <line x1="-8" y1="-4" x2="-8" y2="6" stroke="#60a5fa" stroke-width="2"/>
+                  <path d="M10 -4 C10 4 -4 4 -8 10" fill="none" stroke="#a855f7" stroke-width="2"/>
+                  <text x="0" y="92" text-anchor="middle" fill="#93c5fd" font-size="14" font-weight="800" font-family="monospace">GitHub Repository</text>
+                  <text x="0" y="114" text-anchor="middle" fill="#e2e8f0" font-size="14.5" font-weight="700">مستودع المشروع</text>
+                </g>
+
+                <!-- Station 3: Pages Build & Deployment -->
+                <g id="s4-st2" transform="translate(604, 168)" opacity="0.5">
+                  <circle r="58" fill="#151c48" stroke="#a855f7" stroke-width="2.5"/>
+                  <!-- Rotating Gear -->
+                  <g class="anim-spin">
+                    <circle r="20" fill="none" stroke="#c084fc" stroke-width="5" stroke-dasharray="8 6"/>
+                    <circle r="9" fill="#0b1f44" stroke="#22d3ee" stroke-width="2.2"/>
+                  </g>
+                  <text x="0" y="92" text-anchor="middle" fill="#d8b4fe" font-size="13.5" font-weight="800" font-family="monospace">Build &amp; Deployment</text>
+                  <text x="0" y="114" text-anchor="middle" fill="#e2e8f0" font-size="14.5" font-weight="700">البناء والنشر السحابي</text>
+                </g>
+
+                <!-- Station 4: Published Website -->
+                <g id="s4-st3" transform="translate(842, 168)" opacity="0.5">
+                  <circle r="58" fill="#092942" stroke="#10b981" stroke-width="2.5"/>
+                  <rect x="-28" y="-20" width="56" height="40" rx="6" fill="#051328" stroke="#10b981" stroke-width="2"/>
+                  <line x1="-28" y1="-8" x2="28" y2="-8" stroke="#10b981" stroke-width="1.5"/>
+                  <rect x="-18" y="0" width="36" height="6" rx="3" fill="#22d3ee"/>
+                  <rect x="-18" y="10" width="22" height="4" rx="2" fill="#6ee7b7"/>
+                  <text x="0" y="92" text-anchor="middle" fill="#6ee7b7" font-size="14" font-weight="800" font-family="monospace">Published Website</text>
+                  <text x="0" y="114" text-anchor="middle" fill="#e2e8f0" font-size="14.5" font-weight="700">الموقع المنشور</text>
+                </g>
+
+                <!-- Station 5: Visitor Browser -->
+                <g id="s4-st4" transform="translate(1082, 168)" opacity="0.5">
+                  <circle r="58" fill="#0b1f44" stroke="#22d3ee" stroke-width="2.5"/>
+                  <!-- Mini Visitor Character -->
+                  <circle cx="0" cy="-16" r="14" fill="#f5cba7"/>
+                  <path d="M-22 24 C-22 4 22 4 22 24 Z" fill="#a855f7"/>
+                  <rect x="-24" y="12" width="48" height="14" rx="4" fill="#0f172a" stroke="#10b981" stroke-width="1.5"/>
+                  <text x="0" y="92" text-anchor="middle" fill="#67e8f9" font-size="14" font-weight="800" font-family="monospace">Visitor Browser</text>
+                  <text x="0" y="114" text-anchor="middle" fill="#e2e8f0" font-size="14.5" font-weight="700">متصفح الزائر</text>
+                </g>
+
+                <!-- Traveling File Packets along the Motion Path -->
+                <g id="s4-pkt-html" transform="translate(126, 128)">
+                  <rect x="-22" y="-14" width="44" height="28" rx="7" fill="#082f49" stroke="#22d3ee" stroke-width="2" filter="url(#softGlow)"/>
+                  <text x="0" y="5" text-anchor="middle" fill="#67e8f9" font-size="11.5" font-weight="800" font-family="monospace">HTML</text>
+                </g>
+                <g id="s4-pkt-css" transform="translate(126, 168)">
+                  <rect x="-20" y="-13" width="40" height="26" rx="7" fill="#172554" stroke="#60a5fa" stroke-width="2"/>
+                  <text x="0" y="4.5" text-anchor="middle" fill="#93c5fd" font-size="11.5" font-weight="800" font-family="monospace">CSS</text>
+                </g>
+                <g id="s4-pkt-js" transform="translate(126, 208)">
+                  <rect x="-18" y="-13" width="36" height="26" rx="7" fill="#2e1065" stroke="#a855f7" stroke-width="2"/>
+                  <text x="0" y="4.5" text-anchor="middle" fill="#d8b4fe" font-size="11.5" font-weight="800" font-family="monospace">JS</text>
+                </g>
+              </svg>
+
+              <!-- Active Stage Arabic Description Pill -->
+              <div class="mg-card s4-stage-bar">
+                <span class="s4-stage-tag" id="s4-stage-tag">المرحلة 1 / 5</span>
+                <div class="s4-stage-desc" id="s4-stage-desc">يرفع المطوّر ملفات الموقع الثابتة من جهازه إلى المستودع.</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===================================================================
+             SCENE 5: التطبيق العملي (80s – 105s)
+             =================================================================== -->
+        <article class="scene" id="scene-4" data-scene="4">
+          <div class="scene-camera" id="cam-4">
+            <div class="s5-wrap">
+              <!-- Right Rail (RTL): 5 Practical Steps -->
+              <div class="s5-steps">
+                <div class="s5-step" id="s5-st0">
+                  <div class="s5-num">1</div>
+                  <div>
+                    <div class="s5-step-title">إنشاء مستودع جديد</div>
+                    <div class="s5-step-sub">تسمية المستودع وتحديد مستوى الوصول</div>
+                  </div>
+                </div>
+                <div class="s5-step" id="s5-st1">
+                  <div class="s5-num">2</div>
+                  <div>
+                    <div class="s5-step-title">إضافة ملف <span class="ltr" dir="ltr">index.html</span></div>
+                    <div class="s5-step-sub">رفع الصفحة الرئيسية وملفات التنسيق والبرمجة</div>
+                  </div>
+                </div>
+                <div class="s5-step" id="s5-st2">
+                  <div class="s5-num">3</div>
+                  <div>
+                    <div class="s5-step-title">فتح <span class="ltr" dir="ltr">Settings</span> ثم <span class="ltr" dir="ltr">Pages</span></div>
+                    <div class="s5-step-sub">الوصول إلى لوحة إعدادات النشر السحابي</div>
+                  </div>
+                </div>
+                <div class="s5-step" id="s5-st3">
+                  <div class="s5-num">4</div>
+                  <div>
+                    <div class="s5-step-title">اختيار مصدر النشر (<span class="ltr" dir="ltr">Source</span>)</div>
+                    <div class="s5-step-sub">تختلف الخيارات حسب إعداد المستودع</div>
+                  </div>
+                </div>
+                <div class="s5-step" id="s5-st4">
+                  <div class="s5-num">5</div>
+                  <div>
+                    <div class="s5-step-title">اكتمال النشر وإتاحة الرابط</div>
+                    <div class="s5-step-sub">تستغرق العملية وقتاً قصيراً حتى يجهز الموقع</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Left: Simulated GitHub Interface -->
+              <div class="gh-window" aria-label="محاكاة واجهة GitHub لإعداد GitHub Pages">
+                <div class="gh-topbar">
+                  <span class="gh-dot" style="background:#fb7185"></span>
+                  <span class="gh-dot" style="background:#f59e0b"></span>
+                  <span class="gh-dot" style="background:#10b981"></span>
+                  <div class="gh-url" id="gh-url-bar">https://github.com/new</div>
+                </div>
+                <div class="gh-tabs">
+                  <div class="gh-tab" id="gh-tab-code">&lt;&gt; Code</div>
+                  <div class="gh-tab">Issues</div>
+                  <div class="gh-tab">Actions</div>
+                  <div class="gh-tab" id="gh-tab-settings">Settings</div>
+                </div>
+                <div class="gh-body">
+                  <!-- View 1: Create Repository -->
+                  <div class="gh-view" id="gh-v0">
+                    <div style="font-size:17px; font-weight:700; color:#f8fafc; margin-bottom:14px;">Create a new repository</div>
+                    <div style="font-size:13px; color:#94a3b8;">Repository name *</div>
+                    <div class="gh-input">cloud-computing-site</div>
+                    <div style="margin-top:14px; display:flex; gap:18px; font-size:13.5px; color:#cbd5e1;">
+                      <span style="color:#67e8f9; font-weight:700;">● Public</span>
+                      <span style="opacity:0.55;">○ Private</span>
+                    </div>
+                    <div class="gh-btn">Create repository</div>
+                  </div>
+
+                  <!-- View 2: Add index.html -->
+                  <div class="gh-view" id="gh-v1">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="font-family:monospace; color:#67e8f9; font-size:14px;">cloud-computing-site / <strong>index.html</strong></span>
+                      <span style="font-size:12px; color:#6ee7b7; background:rgba(16,185,129,0.16); padding:3px 10px; border-radius:999px;">main branch</span>
+                    </div>
+                    <div class="gh-codebox">
+                      &lt;!DOCTYPE html&gt;<br/>
+                      &lt;html lang="ar" dir="rtl"&gt;<br/>
+                      &nbsp;&nbsp;&lt;head&gt;&lt;title&gt;Cloud Project&lt;/title&gt;&lt;/head&gt;<br/>
+                      &nbsp;&nbsp;&lt;body&gt;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&lt;h1&gt;مرحباً بكم في مشروع الحوسبة السحابية&lt;/h1&gt;<br/>
+                      &nbsp;&nbsp;&lt;/body&gt;<br/>
+                      &lt;/html&gt;
+                    </div>
+                    <div class="gh-btn">Commit changes</div>
+                  </div>
+
+                  <!-- View 3 & 4 & 5: Settings -> Pages -->
+                  <div class="gh-view" id="gh-v2">
+                    <div class="gh-settings-layout">
+                      <div class="gh-sidebar">
+                        <div class="gh-side-item">General</div>
+                        <div class="gh-side-item">Collaborators</div>
+                        <div class="gh-side-item">Branches</div>
+                        <div class="gh-side-item active">Pages</div>
+                        <div class="gh-side-item">Actions</div>
+                      </div>
+                      <div>
+                        <div style="font-size:17px; font-weight:700; color:#f8fafc; margin-bottom:10px;">GitHub Pages — Build and deployment</div>
+                        <div style="font-size:12.5px; color:#94a3b8; margin-bottom:6px;">Source (تختلف الخيارات حسب إعداد المستودع)</div>
+                        <div class="gh-input" id="gh-source-select" style="display:flex; justify-content:space-between;">
+                          <span>Deploy from a branch (or GitHub Actions)</span>
+                          <span style="color:#67e8f9;">▾</span>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:10px;" id="gh-branch-row">
+                          <div class="gh-input" style="flex:1; margin-top:0;">Branch: main</div>
+                          <div class="gh-input" style="width:110px; margin-top:0;">/ (root)</div>
+                          <div class="gh-btn" style="margin-top:0;">Save</div>
+                        </div>
+
+                        <!-- Deployment Progress Bar (Step 5) -->
+                        <div id="gh-deploy-section" style="margin-top:16px; opacity:0; transition:opacity 0.4s ease;">
+                          <div style="display:flex; justify-content:space-between; font-size:12.5px; color:#cbd5e1;">
+                            <span id="gh-deploy-label">Building &amp; deploying static files...</span>
+                            <span id="gh-deploy-pct" style="font-family:monospace; color:#67e8f9;">0%</span>
+                          </div>
+                          <div class="gh-deploy-bar"><div class="gh-deploy-fill" id="gh-deploy-fill"></div></div>
+                          <div class="gh-live-banner" id="gh-live-banner">
+                            ✓ Your site is live at <strong>https://student.github.io/cloud-computing-site/</strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===================================================================
+             SCENE 6: ماذا يحدث خلف الكواليس؟ (105s – 135s)
+             =================================================================== -->
+        <article class="scene" id="scene-5" data-scene="5">
+          <div class="scene-camera" id="cam-5">
+            <div class="s6-wrap">
+              <svg viewBox="0 0 1208 464" width="1208" height="464" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="شرح تقني لما يحدث خلف الكواليس عند البناء والنشر وطلب المتصفح للملفات الثابتة">
+                <!-- Right Block: GitHub Cloud & Data Center Static Server -->
+                <g id="s6-cloud-box" transform="translate(762, 26)">
+                  <rect x="0" y="0" width="420" height="384" rx="18" fill="rgba(10, 26, 58, 0.88)" stroke="#38bdf8" stroke-width="2.2"/>
+                  <text x="210" y="34" text-anchor="middle" fill="#67e8f9" font-size="17" font-weight="800">البنية السحابية — GitHub Pages</text>
+
+                  <!-- Sub-block 1: Source Receiver -->
+                  <g id="s6-p0" transform="translate(26, 56)" opacity="0.45">
+                    <rect width="368" height="72" rx="12" fill="#071530" stroke="#38bdf8" stroke-width="1.8"/>
+                    <text x="350" y="30" text-anchor="start" fill="#67e8f9" font-size="15.5" font-weight="700">1. استقبال مصدر الموقع</text>
+                    <text x="350" y="54" text-anchor="start" fill="#cbd5e1" font-size="13.5">قراءة الملفات من المستودع والفرع المحدد</text>
+                    <rect x="18" y="18" width="44" height="36" rx="7" fill="rgba(34,211,238,0.16)" stroke="#22d3ee"/>
+                    <text x="40" y="41" text-anchor="middle" direction="ltr" fill="#67e8f9" font-size="12" font-family="monospace">GIT</text>
+                  </g>
+
+                  <!-- Sub-block 2: Build & Prepare -->
+                  <g id="s6-p1" transform="translate(26, 146)" opacity="0.45">
+                    <rect width="368" height="78" rx="12" fill="#131842" stroke="#a855f7" stroke-width="1.8"/>
+                    <text x="350" y="32" text-anchor="start" fill="#d8b4fe" font-size="15.5" font-weight="700">2. تجهيز ونشر الملفات الثابتة</text>
+                    <text x="350" y="56" text-anchor="start" fill="#cbd5e1" font-size="13.5">تجهيز حزمة HTML / CSS / JS للتوزيع</text>
+                    <g transform="translate(40, 39)"><g class="anim-spin">
+                      <circle r="15" fill="none" stroke="#c084fc" stroke-width="4" stroke-dasharray="6 5"/>
+                    </g></g>
+                  </g>
+
+                  <!-- Sub-block 3: Isometric Data Center / Static File Server -->
+                  <g id="s6-p2" transform="translate(26, 242)" opacity="0.45">
+                    <rect width="368" height="118" rx="12" fill="#062238" stroke="#10b981" stroke-width="2"/>
+                    <text x="350" y="30" text-anchor="start" fill="#6ee7b7" font-size="15" font-weight="700">3. مركز البيانات وخوادم التوزيع</text>
+                    <text x="350" y="54" text-anchor="start" fill="#cbd5e1" font-size="13.5">إتاحة الملفات عبر رابط HTTPS عام</text>
+                    <text x="350" y="80" text-anchor="end" direction="ltr" fill="#67e8f9" font-size="12.5" font-family="monospace">https://user.github.io/project</text>
+                    <text x="350" y="102" text-anchor="end" direction="ltr" fill="#94a3b8" font-size="11.5">Static Edge Delivery • No User Backend</text>
+                    <!-- Isometric Server Racks -->
+                    <g transform="translate(18, 22)">
+                      <rect x="0" y="0" width="32" height="74" rx="5" fill="#0c264a" stroke="#10b981" stroke-width="1.5"/>
+                      <rect x="40" y="8" width="32" height="66" rx="5" fill="#0c264a" stroke="#22d3ee" stroke-width="1.5"/>
+                      <circle cx="10" cy="16" r="2.5" fill="#10b981" class="led-1"/>
+                      <circle cx="10" cy="30" r="2.5" fill="#22d3ee" class="led-2"/>
+                      <circle cx="10" cy="44" r="2.5" fill="#10b981" class="led-3"/>
+                      <circle cx="50" cy="22" r="2.5" fill="#22d3ee" class="led-2"/>
+                      <circle cx="50" cy="36" r="2.5" fill="#10b981" class="led-1"/>
+                    </g>
+                  </g>
+                </g>
+
+                <!-- Center Network Connections + HTTPS Lock -->
+                <g transform="translate(454, 140)">
+                  <!-- Request Line (Visitor -> Server) -->
+                  <path id="s6-req-path" d="M0 36 C90 10, 210 10, 304 36" fill="none" stroke="#60a5fa" stroke-width="2.6" stroke-dasharray="7 7"/>
+                  <text x="152" y="12" text-anchor="middle" direction="ltr" fill="#93c5fd" font-size="13" font-family="monospace" font-weight="700">HTTPS GET /index.html →</text>
+                  <circle id="s6-req-pkt" r="7" fill="#60a5fa" filter="url(#softGlow)" opacity="0"/>
+
+                  <!-- HTTPS Lock Centerpiece -->
+                  <g id="s6-https-lock" transform="translate(152, 86)" opacity="0.45">
+                    <circle r="38" fill="#071b36" stroke="#10b981" stroke-width="2.5" filter="url(#softGlow)"/>
+                    <rect x="-14" y="-3" width="28" height="22" rx="5" fill="#10b981"/>
+                    <path d="M-9 -3 V-11 A9 9 0 0 1 9 -11 V-3" fill="none" stroke="#a7f3d0" stroke-width="3.2" stroke-linecap="round"/>
+                    <circle cx="0" cy="8" r="3" fill="#041225"/>
+                    <text x="0" y="56" text-anchor="middle" fill="#6ee7b7" font-size="13.5" font-weight="800" font-family="monospace">HTTPS / TLS</text>
+                  </g>
+
+                  <!-- Response Line (Server -> Visitor) -->
+                  <path id="s6-res-path" d="M304 166 C210 194, 90 194, 0 166" fill="none" stroke="#22d3ee" stroke-width="2.6" stroke-dasharray="7 7"/>
+                  <text x="152" y="206" text-anchor="middle" direction="ltr" fill="#67e8f9" font-size="13" font-family="monospace" font-weight="700">← 200 OK (HTML, CSS, JS)</text>
+                  <circle id="s6-res-pkt" r="7" fill="#22d3ee" filter="url(#softGlow)" opacity="0"/>
+                </g>
+
+                <!-- Left Block: Visitor Character + Browser Rendering Static Site -->
+                <g id="s6-visitor-box" transform="translate(26, 26)">
+                  <rect x="0" y="0" width="420" height="384" rx="18" fill="rgba(10, 26, 58, 0.88)" stroke="#22d3ee" stroke-width="2.2"/>
+                  <text x="210" y="34" text-anchor="middle" fill="#67e8f9" font-size="17" font-weight="800">جهاز المستخدم والمتصفح</text>
+
+                  <!-- Browser Window -->
+                  <g id="s6-browser" transform="translate(24, 54)" opacity="0.55">
+                    <rect width="372" height="162" rx="12" fill="#061024" stroke="#38bdf8" stroke-width="1.8"/>
+                    <rect width="372" height="30" rx="12" fill="#0e2246"/>
+                    <circle cx="16" cy="15" r="4" fill="#fb7185"/>
+                    <circle cx="30" cy="15" r="4" fill="#f59e0b"/>
+                    <circle cx="44" cy="15" r="4" fill="#10b981"/>
+                    <rect x="64" y="6" width="290" height="18" rx="9" fill="#040b18"/>
+                    <text x="209" y="19" text-anchor="middle" direction="ltr" fill="#6ee7b7" font-size="11.5" font-family="monospace">🔒 https://user.github.io/project</text>
+
+                    <!-- Rendered Site Content (fades in during step 5) -->
+                    <g id="s6-rendered-site" opacity="0.18">
+                      <rect x="16" y="42" width="340" height="38" rx="7" fill="rgba(34,211,238,0.2)" stroke="#22d3ee"/>
+                      <text x="186" y="66" text-anchor="middle" fill="#f8fafc" font-size="15" font-weight="700">تم تحميل الموقع الثابت بنجاح</text>
+                      <rect x="16" y="90" width="162" height="56" rx="7" fill="rgba(59,130,246,0.18)" stroke="#3b82f6"/>
+                      <rect x="194" y="90" width="162" height="56" rx="7" fill="rgba(168,85,247,0.18)" stroke="#a855f7"/>
+                      <rect x="30" y="106" width="110" height="8" rx="4" fill="#93c5fd"/>
+                      <rect x="30" y="122" width="80" height="6" rx="3" fill="#64748b"/>
+                      <rect x="208" y="106" width="110" height="8" rx="4" fill="#d8b4fe"/>
+                      <rect x="208" y="122" width="84" height="6" rx="3" fill="#64748b"/>
+                    </g>
+                  </g>
+
+                  <!-- ARTICULATED VISITOR CHARACTER (Character #2) -->
+                  <g transform="translate(88, 226)">
+                    <!-- Desk -->
+                    <rect x="-46" y="126" width="340" height="14" rx="6" fill="#16305c" stroke="rgba(56,189,248,0.3)"/>
+                    <!-- Laptop -->
+                    <g transform="translate(132, 66)">
+                      <polygon points="10,0 112,0 104,58 2,58" fill="#0b1d3d" stroke="#22d3ee" stroke-width="2"/>
+                      <rect x="14" y="10" width="82" height="38" rx="3" fill="#062238"/>
+                      <rect x="22" y="18" width="54" height="6" rx="3" fill="#67e8f9"/>
+                      <rect x="22" y="30" width="38" height="5" rx="2.5" fill="#10b981"/>
+                      <rect x="-6" y="58" width="122" height="7" rx="3.5" fill="#334155"/>
+                    </g>
+
+                    <!-- Visitor Body -->
+                    <g class="char-torso">
+                      <path d="M18 68 C18 48 76 48 78 68 L84 126 L12 126 Z" fill="url(#gPurple)" stroke="#d8b4fe" stroke-width="1.5"/>
+                    </g>
+                    <!-- Visitor Head -->
+                    <g class="char-head">
+                      <rect x="40" y="38" width="14" height="18" rx="5" fill="#f1c29b"/>
+                      <circle cx="48" cy="22" r="22" fill="#f5cba7"/>
+                      <path d="M25 22 C24 2 70 0 72 22 C66 12 52 9 36 12 Z" fill="#1e293b"/>
+                      <g class="char-eyes">
+                        <circle cx="57" cy="21" r="2.2" fill="#0f172a"/>
+                      </g>
+                      <path d="M52 31 Q58 35 63 31" fill="none" stroke="#9a6b4c" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                    <!-- Visitor Hand interacting with Laptop/Mouse -->
+                    <g class="char-mouse">
+                      <path d="M62 82 L106 112 L138 118" fill="none" stroke="#c084fc" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="142" cy="118" r="6.5" fill="#f5cba7"/>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+
+              <div class="s6-note-banner">ملاحظة تقنية: تُسلّم <span class="ltr" dir="ltr">GitHub Pages</span> ملفات ثابتة جاهزة للمتصفح دون تشغيل خادم <span class="ltr" dir="ltr">Backend</span> خاص بالمستخدم</div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===================================================================
+             SCENE 7: المميزات والقيود (135s – 155s)
+             =================================================================== -->
+        <article class="scene" id="scene-6" data-scene="6">
+          <div class="scene-camera" id="cam-6">
+            <div class="s7-wrap">
+              <!-- Advantages Column -->
+              <div class="mg-card s7-col pros">
+                <div class="s7-col-head">
+                  <div class="s7-col-title">المميزات</div>
+                  <span class="ltr" dir="ltr" style="color:#67e8f9; font-weight:700; font-size:14px;">Advantages</span>
+                </div>
+                <ul class="s7-list">
+                  <li class="s7-item" id="s7-p0"><span class="s7-bullet">✓</span><span>سهولة النشر المباشر دون الحاجة إلى إعداد أو إدارة خوادم.</span></li>
+                  <li class="s7-item" id="s7-p1"><span class="s7-bullet">✓</span><span>استضافة مخصصة ومستقرة للمواقع الثابتة (<span class="ltr" dir="ltr">HTML / CSS / JS</span>).</span></li>
+                  <li class="s7-item" id="s7-p2"><span class="s7-bullet">✓</span><span>دعم مدمج لبروتوكول التشفير <span class="ltr" dir="ltr">HTTPS</span> لحماية اتصال الزائر.</span></li>
+                  <li class="s7-item" id="s7-p3"><span class="s7-bullet">✓</span><span>تكامل مباشر مع مستودعات <span class="ltr" dir="ltr">GitHub</span> وسير عمل التطوير.</span></li>
+                  <li class="s7-item" id="s7-p4"><span class="s7-bullet">✓</span><span>تحديث الموقع تلقائياً بمجرد تحديث ملفات المستودع.</span></li>
+                </ul>
+              </div>
+
+              <!-- Limitations Column -->
+              <div class="mg-card s7-col cons">
+                <div class="s7-col-head">
+                  <div class="s7-col-title">القيود</div>
+                  <span class="ltr" dir="ltr" style="color:#d8b4fe; font-weight:700; font-size:14px;">Limitations</span>
+                </div>
+                <ul class="s7-list">
+                  <li class="s7-item" id="s7-c0"><span class="s7-bullet">!</span><span>لا يدعم تشغيل <span class="ltr" dir="ltr">Backend</span> تقليدي مثل <span class="ltr" dir="ltr">PHP</span> أو <span class="ltr" dir="ltr">Python</span> أو <span class="ltr" dir="ltr">Node.js</span> على خادم <span class="ltr" dir="ltr">GitHub Pages</span>.</span></li>
+                  <li class="s7-item" id="s7-c1"><span class="s7-bullet">!</span><span>ليس بديلاً كاملاً عن خوادم التطبيقات وقواعد البيانات الديناميكية.</span></li>
+                  <li class="s7-item" id="s7-c2"><span class="s7-bullet">!</span><span>توجد حدود استخدام وشروط خاصة بالخدمة (مثل حجم المستودع والنطاق الترددي وسياسة الاستخدام).</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ===================================================================
+             SCENE 8: الخاتمة (155s – 165s)
+             =================================================================== -->
+        <article class="scene" id="scene-7" data-scene="7">
+          <div class="scene-camera" id="cam-7">
+            <div class="s8-wrap">
+              <!-- Background Transformation Arc SVG -->
+              <svg viewBox="0 0 1208 464" width="1208" height="464" style="position:absolute; inset:0; z-index:1; pointer-events:none;" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M120 350 Q604 38 1088 350" fill="none" stroke="rgba(34, 211, 238, 0.35)" stroke-width="3" class="anim-dash"/>
+                <!-- Right: Simple Code Files -->
+                <g transform="translate(1024, 326)"><g class="anim-float">
+                  <rect x="0" y="0" width="136" height="92" rx="14" fill="rgba(10,26,58,0.88)" stroke="#22d3ee" stroke-width="2"/>
+                  <text x="68" y="38" text-anchor="middle" fill="#67e8f9" font-size="14" font-family="monospace" font-weight="700">HTML • CSS • JS</text>
+                  <text x="68" y="66" text-anchor="middle" fill="#cbd5e1" font-size="14">ملفات برمجية بسيطة</text>
+                </g></g>
+                <!-- Left: Global Published Website -->
+                <g transform="translate(40, 326)"><g class="anim-float" style="animation-delay:0.5s">
+                  <rect x="0" y="0" width="144" height="92" rx="14" fill="rgba(8,36,56,0.9)" stroke="#10b981" stroke-width="2"/>
+                  <text x="72" y="38" text-anchor="middle" direction="ltr" fill="#6ee7b7" font-size="14" font-family="monospace" font-weight="700">🔒 HTTPS LIVE</text>
+                  <text x="72" y="66" text-anchor="middle" fill="#cbd5e1" font-size="14">موقع متاح للعالم</text>
+                </g></g>
+              </svg>
+
+              <div class="s8-quote" id="s8-quote">«من ملفات برمجية بسيطة... إلى موقع متاح للعالم.»</div>
+              <div class="s8-brand-block" id="s8-brand">
+                <div class="s8-brand-title" dir="ltr" style="direction:ltr;">GitHub Pages</div>
+                <div class="s8-brand-sub" dir="ltr" style="direction:ltr;">Cloud-Based Static Website Hosting</div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Synchronized Narration Caption Safe Zone -->
+      <div class="caption-zone" role="region" aria-label="النص التعليمي المتزامن">
+        <p id="caption-text">اضغط على زر التشغيل لبدء الفيلم التعليمي التفاعلي حول خدمة <span class="ltr" dir="ltr">GitHub Pages</span>.</p>
+      </div>
+
+      <!-- Start Overlay (Film NEVER auto-plays on load) -->
+      <div class="stage-overlay" id="start-overlay">
+        <div class="intro-kicker">عرض تعليمي لمقرر الحوسبة السحابية • <span class="ltr" dir="ltr">Cloud Computing</span></div>
+        <h2 class="intro-title ltr" dir="ltr">GitHub Pages</h2>
+        <div class="intro-subtitle ltr" dir="ltr">Cloud-Based Static Website Hosting and Deployment</div>
+        <div class="intro-meta">
+          <span>8 مشاهد مترابطة</span>
+          <span>•</span>
+          <span>المدة: <span class="ltr" dir="ltr">02:45</span> (165 ثانية)</span>
+          <span>•</span>
+          <span>موشن جرافيك تفاعلي يعمل دون إنترنت</span>
+        </div>
+        <button type="button" class="ctrl-btn" id="hero-play-btn" style="height:48px; min-width:190px; font-size:17px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+          <span>بدء العرض</span>
+        </button>
+        <div class="intro-hint">اختصارات لوحة المفاتيح: <span class="code-inline">Space</span> للتشغيل/الإيقاف • <span class="code-inline">Esc</span> للخروج من ملء الشاشة • <span class="code-inline">T</span> لعرض النص الكامل للشرح</div>
+      </div>
+
+      <!-- Full Narration Script Modal (toggled via 'T' key without adding extra HUD buttons) -->
+      <div id="transcript-modal" role="dialog" aria-modal="true" aria-label="النص الكامل للشرح">
+        <div class="transcript-header">
+          <strong style="font-size:18px; color:var(--cyan-bright);">النص التعليمي الكامل للفيلم (8 مشاهد — 165 ثانية)</strong>
+          <span style="font-size:13px; color:var(--text-muted);">اضغط <span class="code-inline">T</span> أو <span class="code-inline">Esc</span> للإغلاق</span>
+        </div>
+        <div class="transcript-body" id="transcript-body"></div>
+      </div>
+
+      <!-- STRICT 3-CONTROL BAR: (1) Play/Pause/Restart, (2) Non-Interactive Progress Timeline, (3) Fullscreen -->
+      <footer class="control-bar" aria-label="أدوات التحكم بالعرض">
+        <!-- Control 1: Play / Pause / Restart -->
+        <button type="button" class="ctrl-btn" id="btn-play" aria-label="تشغيل الفيلم">
+          <svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,4 20,12 6,20"/></svg>
+          <svg id="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <svg id="icon-replay" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span id="btn-play-label">تشغيل</span>
+        </button>
+
+        <!-- Control 2: Simple Non-Interactive Timeline Progress Indicator -->
+        <div class="timeline-indicator" aria-label="مؤشر التقدم الزمني للمشاهد">
+          <div class="timeline-track" id="timeline-track"></div>
+          <div class="timeline-clock" id="timeline-clock">00:00 / 02:45</div>
+        </div>
+
+        <!-- Control 3: Fullscreen Toggle -->
+        <button type="button" class="ctrl-btn ctrl-btn-icon" id="btn-fullscreen" aria-label="تكبير الشاشة" title="ملء الشاشة">
+          <svg id="icon-fs-enter" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+          <svg id="icon-fs-exit" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
+            <line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </button>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =======================================================================
+         1. STRUCTURED TIMELINE DATA (8 SCENES — EXACT TOTAL: 165.0 SECONDS)
+         ======================================================================= */
+      const SCENES = [
+        {
+          id: 0,
+          title: 'المقدمة',
+          start: 0,
+          duration: 15,
+          cues: [
+            { at: 0.0,  text: 'أنجز مطوّر برمجيات موقعه الإلكتروني محلياً على حاسوبه، وأصبح جاهزاً لمشاركته مع الآخرين عبر الإنترنت.' },
+            { at: 5.2,  text: 'لكن السؤال العملي يبرز فوراً: كيف يمكن إتاحة هذا الموقع للعالم دون شراء استضافة تقليدية أو إدارة خادم خاص؟' },
+            { at: 10.2, text: 'هنا تبرز الحاجة إلى حلّ سحابي بسيط ومباشر لنشر المواقع الثابتة دون تعقيد البنية التحتية.' }
+          ]
+        },
+        {
+          id: 1,
+          title: 'التعريف بالخدمة',
+          start: 15,
+          duration: 20,
+          cues: [
+            { at: 0.0,  text: 'تُعدّ خدمة <span class="ltr" dir="ltr">GitHub Pages</span> خدمة سحابية لاستضافة ونشر المواقع الثابتة مباشرة من مستودعات <span class="ltr" dir="ltr">GitHub</span>.' },
+            { at: 6.5,  text: 'تعتمد المواقع الثابتة على ملفات الواجهة الأمامية فقط: <span class="ltr" dir="ltr">HTML</span> و<span class="ltr" dir="ltr">CSS</span> و<span class="ltr" dir="ltr">JavaScript</span>، وتُعرض مباشرة في متصفح الزائر.' },
+            { at: 13.5, text: 'لذلك تُعدّ خياراً عملياً لمواقع التعريف الشخصية، وصفحات التوثيق التقني، والمشاريع الأكاديمية والشخصية.' }
+          ]
+        },
+        {
+          id: 2,
+          title: 'المكونات الأساسية',
+          start: 35,
+          duration: 20,
+          cues: [
+            { at: 0.0,  text: 'تقوم بنية النشر في <span class="ltr" dir="ltr">GitHub Pages</span> على ستة مكونات مترابطة تبدأ من <span class="ltr" dir="ltr">GitHub Repository</span> الذي يحفظ المشروع.' },
+            { at: 6.5,  text: 'داخل المستودع توجد ملفات المصدر <span class="ltr" dir="ltr">Source Files</span> ضمن فرع محدد <span class="ltr" dir="ltr">Branch</span>، وتُضبط خيارات النشر عبر <span class="ltr" dir="ltr">Pages Settings</span>.' },
+            { at: 13.5, text: 'بعد ذلك تتولى عملية <span class="ltr" dir="ltr">Deployment</span> تجهيز الملفات وإطلاقها لتصبح موقعاً منشوراً <span class="ltr" dir="ltr">Published Website</span> جاهزاً للتصفح.' }
+          ]
+        },
+        {
+          id: 3,
+          title: 'رحلة النشر',
+          start: 55,
+          duration: 25,
+          cues: [
+            { at: 0.0,  text: 'المرحلة الأولى: يرفع المطوّر ملفات الموقع إلى مستودع المشروع عبر <span class="ltr" dir="ltr">Git</span> أو واجهة <span class="ltr" dir="ltr">GitHub</span>.' },
+            { at: 5.0,  text: 'المرحلة الثانية: يستقبل <span class="ltr" dir="ltr">GitHub Repository</span> التحديثات ويحفظ نسخة منظمة من الملفات داخل الفرع المحدد.' },
+            { at: 10.0, text: 'المرحلة الثالثة: تبدأ مرحلة <span class="ltr" dir="ltr">Pages Build and Deployment</span> لتجهيز الملفات الثابتة ونشرها تلقائياً.' },
+            { at: 15.0, text: 'المرحلة الرابعة: يصبح الموقع المنشور <span class="ltr" dir="ltr">Published Website</span> متاحاً عبر رابط ويب آمن.' },
+            { at: 20.0, text: 'المرحلة الخامسة: يفتح المستخدم الرابط في <span class="ltr" dir="ltr">Visitor Browser</span> ليشاهد الموقع فوراً من أي مكان.' }
+          ]
+        },
+        {
+          id: 4,
+          title: 'التطبيق العملي',
+          start: 80,
+          duration: 25,
+          cues: [
+            { at: 0.0,  text: 'عملياً، نبدأ بإنشاء مستودع جديد على <span class="ltr" dir="ltr">GitHub</span> ثم إضافة ملف الصفحة الرئيسية <span class="ltr" dir="ltr">index.html</span> وبقية الملفات.' },
+            { at: 6.0,  text: 'بعد ذلك ننتقل إلى <span class="ltr" dir="ltr">Settings</span> في المستودع، ومن القائمة الجانبية نفتح قسم <span class="ltr" dir="ltr">Pages</span> لضبط النشر.' },
+            { at: 12.5, text: 'نختار مصدر النشر المناسب من فرع محدد أو عبر <span class="ltr" dir="ltr">GitHub Actions</span>، إذ تختلف الخيارات حسب إعداد المستودع.' },
+            { at: 19.0, text: 'وعند حفظ الإعدادات تبدأ عملية النشر وتستغرق بعض الوقت حتى تكتمل ويصبح رابط الموقع متاحاً للزيارة.' }
+          ]
+        },
+        {
+          id: 5,
+          title: 'ماذا يحدث خلف الكواليس؟',
+          start: 105,
+          duration: 30,
+          cues: [
+            { at: 0.0,  text: 'خلف الكواليس، يستقبل <span class="ltr" dir="ltr">GitHub</span> مصدر الموقع من المستودع بمجرد تفعيل النشر أو دفع تحديث جديد.' },
+            { at: 6.0,  text: 'تتولى البنية السحابية تجهيز الملفات الثابتة ونشرها حسب إعدادات المصدر، دون تشغيل خادم <span class="ltr" dir="ltr">Backend</span> خاص بالمستخدم.' },
+            { at: 12.0, text: 'عند اكتمال النشر، يُتاح الموقع عبر عنوان <span class="ltr" dir="ltr">URL</span> عام ومشفّر ببروتوكول <span class="ltr" dir="ltr">HTTPS</span>.' },
+            { at: 18.0, text: 'وعند زيارة الرابط، يطلب المتصفح ملفات الموقع الثابتة عبر الشبكة من خوادم توزيع المحتوى.' },
+            { at: 24.0, text: 'يتلقى المستخدم ملفات <span class="ltr" dir="ltr">HTML</span> و<span class="ltr" dir="ltr">CSS</span> و<span class="ltr" dir="ltr">JavaScript</span> الجاهزة ليعرضها المتصفح مباشرة على جهازه.' }
+          ]
+        },
+        {
+          id: 6,
+          title: 'المميزات والقيود',
+          start: 135,
+          duration: 20,
+          cues: [
+            { at: 0.0,  text: 'تتميّز <span class="ltr" dir="ltr">GitHub Pages</span> بسهولة النشر، واستضافة المواقع الثابتة مع دعم <span class="ltr" dir="ltr">HTTPS</span>، والتكامل المباشر مع <span class="ltr" dir="ltr">GitHub</span>.' },
+            { at: 6.8,  text: 'كما تتيح تحديث الموقع بسهولة عبر تحديث المستودع، غير أن لها قيوداً تقنية يجب أخذها في الحسبان.' },
+            { at: 13.0, text: 'فهي لا تدعم تشغيل <span class="ltr" dir="ltr">Backend</span> مثل <span class="ltr" dir="ltr">PHP</span> أو <span class="ltr" dir="ltr">Python</span> أو <span class="ltr" dir="ltr">Node.js</span>، وليست بديلاً عن خوادم التطبيقات وقواعد البيانات، وتخضع لحدود وشروط استخدام.' }
+          ]
+        },
+        {
+          id: 7,
+          title: 'الخاتمة',
+          start: 155,
+          duration: 10,
+          cues: [
+            { at: 0.0, text: '«من ملفات برمجية بسيطة... إلى موقع متاح للعالم.»' },
+            { at: 5.0, text: '<span class="ltr" dir="ltr">GitHub Pages</span> — استضافة ونشر المواقع الثابتة بالاعتماد على الحوسبة السحابية.' }
+          ]
+        }
+      ];
+
+      const TOTAL_DURATION = SCENES.reduce((acc, s) => acc + s.duration, 0); // 165 seconds
+
+      /* =======================================================================
+         2. DOM REFERENCES & STATE
+         ======================================================================= */
+      const shell = document.getElementById('cinema-shell');
+      const stage = document.getElementById('stage');
+      const hdrNum = document.getElementById('hdr-scene-num');
+      const hdrTitle = document.getElementById('hdr-scene-title');
+      const captionEl = document.getElementById('caption-text');
+      const startOverlay = document.getElementById('start-overlay');
+      const heroPlayBtn = document.getElementById('hero-play-btn');
+      const btnPlay = document.getElementById('btn-play');
+      const btnPlayLabel = document.getElementById('btn-play-label');
+      const iconPlay = document.getElementById('icon-play');
+      const iconPause = document.getElementById('icon-pause');
+      const iconReplay = document.getElementById('icon-replay');
+      const btnFs = document.getElementById('btn-fullscreen');
+      const iconFsEnter = document.getElementById('icon-fs-enter');
+      const iconFsExit = document.getElementById('icon-fs-exit');
+      const timelineTrack = document.getElementById('timeline-track');
+      const timelineClock = document.getElementById('timeline-clock');
+      const transcriptModal = document.getElementById('transcript-modal');
+      const transcriptBody = document.getElementById('transcript-body');
+
+      const sceneEls = SCENES.map((s) => document.getElementById('scene-' + s.id));
+      const segFills = [];
+
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const state = {
+        currentTime: 0,
+        isPlaying: false,
+        hasStarted: false,
+        isFinished: false,
+        activeSceneIndex: -1,
+        lastCaptionKey: '',
+        lastFrameTs: null,
+        rafId: null
+      };
+
+      /* =======================================================================
+         3. INITIALIZE NON-INTERACTIVE TIMELINE SEGMENTS & FULL TRANSCRIPT
+         ======================================================================= */
+      function buildTimelineSegments() {
+        timelineTrack.innerHTML = '';
+        SCENES.forEach((s) => {
+          const seg = document.createElement('div');
+          seg.className = 'tl-seg';
+          seg.style.flex = String(s.duration);
+          const fill = document.createElement('div');
+          fill.className = 'tl-seg-fill';
+          seg.appendChild(fill);
+          timelineTrack.appendChild(seg);
+          segFills.push(fill);
+        });
+      }
+
+      function buildTranscript() {
+        transcriptBody.innerHTML = SCENES.map((s, idx) => {
+          const lines = s.cues.map((c) => '<p>' + c.text + '</p>').join('');
+          return '<div><div class="transcript-scene-title">المشهد ' + (idx + 1) + ': ' + s.title + ' <span class="ltr" dir="ltr">(' + s.duration + 's)</span></div>' + lines + '</div>';
+        }).join('');
+      }
+
+      /* =======================================================================
+         4. RESPONSIVE 16:9 SCALING (1920x1080, 1366x768, 1280x720 & BEYOND)
+         ======================================================================= */
+      function fitStage() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const scale = Math.min(vw / 1280, vh / 720);
+        document.documentElement.style.setProperty('--stage-scale', String(scale));
+      }
+
+      window.addEventListener('resize', fitStage);
+      fitStage();
+
+      /* =======================================================================
+         5. SUBTLE AMBIENT PARTICLE FIELD (PAUSES EXACTLY WITH FILM)
+         ======================================================================= */
+      const pCanvas = document.getElementById('particle-canvas');
+      const pCtx = pCanvas.getContext('2d');
+      const particles = Array.from({ length: 28 }, (_, i) => ({
+        x: (i * 97) % 1280,
+        y: (i * 53) % 720,
+        r: 1.2 + (i % 3) * 0.7,
+        vx: (i % 2 === 0 ? 1 : -1) * (4 + (i % 4) * 2),
+        vy: -3 - (i % 3) * 2,
+        a: 0.18 + (i % 4) * 0.1
+      }));
+
+      function drawParticles(dt) {
+        if (prefersReducedMotion || !pCtx) return;
+        pCtx.clearRect(0, 0, 1280, 720);
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          if (state.isPlaying) {
+            p.x = (p.x + p.vx * dt + 1280) % 1280;
+            p.y = (p.y + p.vy * dt + 720) % 720;
+          }
+          pCtx.beginPath();
+          pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          pCtx.fillStyle = 'rgba(103, 232, 249, ' + p.a + ')';
+          pCtx.fill();
+        }
+      }
+
+      /* =======================================================================
+         6. DETERMINISTIC SCENE CHOREOGRAPHY (PURE FUNCTION OF SCENE ELAPSED)
+         ======================================================================= */
+      function setPointOnPath(pathEl, targetEl, t) {
+        if (!pathEl || !targetEl) return;
+        const clamped = Math.max(0, Math.min(1, t));
+        const len = pathEl.getTotalLength();
+        const pt = pathEl.getPointAtLength(len * clamped);
+        targetEl.setAttribute('cx', pt.x.toFixed(1));
+        targetEl.setAttribute('cy', pt.y.toFixed(1));
+      }
+
+      function setGroupOnPath(pathEl, groupEl, t, dy) {
+        if (!pathEl || !groupEl) return;
+        const clamped = Math.max(0, Math.min(1, t));
+        const len = pathEl.getTotalLength();
+        const pt = pathEl.getPointAtLength(len * clamped);
+        groupEl.setAttribute('transform', 'translate(' + pt.x.toFixed(1) + ',' + (pt.y + dy).toFixed(1) + ')');
+      }
+
+      function applyCamera(camId, progress, scaleRange, panX) {
+        if (prefersReducedMotion) return;
+        const cam = document.getElementById(camId);
+        if (!cam) return;
+        const sc = 1 + scaleRange * progress;
+        const tx = panX * (progress - 0.5);
+        cam.style.transform = 'scale(' + sc.toFixed(4) + ') translateX(' + tx.toFixed(1) + 'px)';
+      }
+
+      function updateSceneChoreography(sceneIdx, elapsed, duration) {
+        const p = Math.max(0, Math.min(1, elapsed / duration));
+
+        if (sceneIdx === 0) {
+          // Scene 1: Intro (0–15s)
+          applyCamera('cam-0', p, 0.025, -8);
+          const badge = document.getElementById('s1-badge');
+          const burden = document.getElementById('s1-burden');
+          badge.classList.toggle('visible', elapsed >= 4.2);
+          burden.setAttribute('opacity', elapsed >= 6.0 ? '1' : '0');
+        } else if (sceneIdx === 1) {
+          // Scene 2: Definition (15–35s)
+          applyCamera('cam-1', p, 0.02, 6);
+          setPointOnPath(document.getElementById('s2-path-1'), document.getElementById('s2-pkt-1'), (elapsed * 0.45) % 1);
+          setPointOnPath(document.getElementById('s2-path-2'), document.getElementById('s2-pkt-2'), ((elapsed * 0.45) + 0.5) % 1);
+          document.getElementById('s2-u1').classList.toggle('visible', elapsed >= 11.5);
+          document.getElementById('s2-u2').classList.toggle('visible', elapsed >= 13.5);
+          document.getElementById('s2-u3').classList.toggle('visible', elapsed >= 15.5);
+        } else if (sceneIdx === 2) {
+          // Scene 3: Core Components (35–55s)
+          applyCamera('cam-2', p, 0.018, -6);
+          const activeNode = Math.min(5, Math.floor(elapsed / 3.1));
+          for (let i = 0; i < 6; i++) {
+            const el = document.getElementById('s3-n' + i);
+            el.classList.toggle('revealed', i <= activeNode);
+            el.classList.toggle('highlighted', i === activeNode);
+          }
+        } else if (sceneIdx === 3) {
+          // Scene 4: Deployment Journey (55–80s)
+          applyCamera('cam-3', p, 0.016, 8);
+          const stageIdx = Math.min(4, Math.floor(elapsed / 5.0));
+          const stageDescs = [
+            'يرفع المطوّر ملفات الموقع الثابتة من جهازه إلى مستودع المشروع.',
+            'يستقبل مستودع GitHub الملفات ويحفظها ضمن الفرع المحدد للنشر.',
+            'تُجهّز خدمة GitHub Pages الملفات وتُشغّل عملية البناء والنشر.',
+            'يصبح الموقع الثابت منشوراً ومتاحاً عبر عنوان URL آمن.',
+            'يطلب متصفح الزائر الموقع فيُعرض المحتوى فوراً على جهازه.'
+          ];
+          document.getElementById('s4-stage-tag').textContent = 'المرحلة ' + (stageIdx + 1) + ' / 5';
+          document.getElementById('s4-stage-desc').textContent = stageDescs[stageIdx];
+
+          for (let i = 0; i < 5; i++) {
+            const st = document.getElementById('s4-st' + i);
+            st.setAttribute('opacity', i <= stageIdx ? '1' : '0.42');
+            st.style.filter = i === stageIdx ? 'drop-shadow(0 0 18px rgba(34,211,238,0.8))' : 'none';
+          }
+
+          const path = document.getElementById('s4-master-path');
+          const progLine = document.getElementById('s4-progress-path');
+          const travelP = Math.min(1, elapsed / 22.5);
+          progLine.setAttribute('stroke-dashoffset', String((956 * (1 - travelP)).toFixed(1)));
+          setGroupOnPath(path, document.getElementById('s4-pkt-html'), travelP, -42);
+          setGroupOnPath(path, document.getElementById('s4-pkt-css'), Math.max(0, travelP - 0.03), 0);
+          setGroupOnPath(path, document.getElementById('s4-pkt-js'), Math.max(0, travelP - 0.06), 42);
+        } else if (sceneIdx === 4) {
+          // Scene 5: Practical Steps (80–105s)
+          const stepIdx = Math.min(4, Math.floor(elapsed / 5.0));
+          for (let i = 0; i < 5; i++) {
+            const st = document.getElementById('s5-st' + i);
+            st.classList.toggle('active', i === stepIdx);
+            st.classList.toggle('done', i < stepIdx);
+          }
+
+          const urlBar = document.getElementById('gh-url-bar');
+          const tabCode = document.getElementById('gh-tab-code');
+          const tabSet = document.getElementById('gh-tab-settings');
+          const v0 = document.getElementById('gh-v0');
+          const v1 = document.getElementById('gh-v1');
+          const v2 = document.getElementById('gh-v2');
+          const deploySec = document.getElementById('gh-deploy-section');
+          const deployFill = document.getElementById('gh-deploy-fill');
+          const deployPct = document.getElementById('gh-deploy-pct');
+          const deployLbl = document.getElementById('gh-deploy-label');
+          const liveBanner = document.getElementById('gh-live-banner');
+
+          v0.classList.toggle('active', stepIdx === 0);
+          v1.classList.toggle('active', stepIdx === 1);
+          v2.classList.toggle('active', stepIdx >= 2);
+          tabCode.classList.toggle('active', stepIdx === 1);
+          tabSet.classList.toggle('active', stepIdx >= 2);
+
+          if (stepIdx === 0) {
+            urlBar.textContent = 'https://github.com/new';
+          } else if (stepIdx === 1) {
+            urlBar.textContent = 'https://github.com/student/cloud-computing-site/blob/main/index.html';
+          } else {
+            urlBar.textContent = 'https://github.com/student/cloud-computing-site/settings/pages';
+          }
+
+          if (stepIdx >= 4) {
+            deploySec.style.opacity = '1';
+            const subP = Math.min(1, (elapsed - 20.0) / 3.6);
+            const pct = Math.round(subP * 100);
+            deployFill.style.width = pct + '%';
+            deployPct.textContent = pct + '%';
+            deployLbl.textContent = pct >= 100 ? 'Deployment completed!' : 'Building & deploying static files...';
+            liveBanner.classList.toggle('visible', pct >= 100);
+          } else {
+            deploySec.style.opacity = '0';
+            deployFill.style.width = '0%';
+            liveBanner.classList.remove('visible');
+          }
+        } else if (sceneIdx === 5) {
+          // Scene 6: Behind the Scenes (105–135s)
+          applyCamera('cam-5', p, 0.015, -5);
+          const phase = Math.min(4, Math.floor(elapsed / 6.0));
+          document.getElementById('s6-p0').setAttribute('opacity', phase >= 0 ? '1' : '0.4');
+          document.getElementById('s6-p1').setAttribute('opacity', phase >= 1 ? '1' : '0.4');
+          document.getElementById('s6-p2').setAttribute('opacity', phase >= 2 ? '1' : '0.4');
+          document.getElementById('s6-https-lock').setAttribute('opacity', phase >= 2 ? '1' : '0.4');
+          document.getElementById('s6-browser').setAttribute('opacity', phase >= 3 ? '1' : '0.5');
+          document.getElementById('s6-rendered-site').setAttribute('opacity', phase >= 4 ? '1' : '0.18');
+
+          const reqPkt = document.getElementById('s6-req-pkt');
+          const resPkt = document.getElementById('s6-res-pkt');
+          if (phase >= 3) {
+            reqPkt.setAttribute('opacity', '1');
+            setPointOnPath(document.getElementById('s6-req-path'), reqPkt, ((elapsed - 18) * 0.45) % 1);
+          } else {
+            reqPkt.setAttribute('opacity', '0');
+          }
+          if (phase >= 4) {
+            resPkt.setAttribute('opacity', '1');
+            setPointOnPath(document.getElementById('s6-res-path'), resPkt, ((elapsed - 24) * 0.45) % 1);
+          } else {
+            resPkt.setAttribute('opacity', '0');
+          }
+        } else if (sceneIdx === 6) {
+          // Scene 7: Pros & Limitations (135–155s)
+          for (let i = 0; i < 5; i++) {
+            document.getElementById('s7-p' + i).classList.toggle('visible', elapsed >= i * 1.8);
+          }
+          for (let j = 0; j < 3; j++) {
+            document.getElementById('s7-c' + j).classList.toggle('visible', elapsed >= 9.5 + j * 2.4);
+          }
+        } else if (sceneIdx === 7) {
+          // Scene 8: Outro (155–165s)
+          applyCamera('cam-7', p, 0.024, 0);
+          document.getElementById('s8-quote').classList.toggle('visible', elapsed >= 0.6);
+          document.getElementById('s8-brand').classList.toggle('visible', elapsed >= 3.2);
+        }
+      }
+
+      /* =======================================================================
+         7. UNIFIED TIMELINE RENDERER
+         ======================================================================= */
+      function formatTime(sec) {
+        const s = Math.max(0, Math.min(TOTAL_DURATION, Math.floor(sec)));
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+      }
+
+      function findSceneIndex(t) {
+        for (let i = SCENES.length - 1; i >= 0; i--) {
+          if (t >= SCENES[i].start) return i;
+        }
+        return 0;
+      }
+
+      function renderAtTime(t) {
+        const clamped = Math.max(0, Math.min(TOTAL_DURATION, t));
+        const idx = findSceneIndex(clamped);
+        const scene = SCENES[idx];
+        const sceneElapsed = clamped - scene.start;
+
+        // Strictly isolate scenes: stop/deactivate previous scene before showing next
+        if (idx !== state.activeSceneIndex) {
+          sceneEls.forEach((el, i) => {
+            el.classList.remove('active', 'exiting');
+            if (i === idx) {
+              el.classList.add('active');
+            }
+          });
+          state.activeSceneIndex = idx;
+          hdrNum.innerHTML = 'المشهد <span class="ltr" dir="ltr">' + String(idx + 1).padStart(2, '0') + ' / 08</span>';
+          hdrTitle.textContent = scene.title;
+        }
+
+        // Update caption strictly synced to current cue
+        let activeCue = scene.cues[0];
+        for (let c = scene.cues.length - 1; c >= 0; c--) {
+          if (sceneElapsed >= scene.cues[c].at) {
+            activeCue = scene.cues[c];
+            break;
+          }
+        }
+        const cueKey = idx + ':' + activeCue.at;
+        if (cueKey !== state.lastCaptionKey) {
+          captionEl.innerHTML = activeCue.text;
+          state.lastCaptionKey = cueKey;
+        }
+
+        // Update non-interactive segmented progress indicator
+        SCENES.forEach((s, i) => {
+          let pct = 0;
+          if (clamped >= s.start + s.duration) {
+            pct = 100;
+          } else if (clamped > s.start) {
+            pct = ((clamped - s.start) / s.duration) * 100;
+          }
+          segFills[i].style.width = pct.toFixed(2) + '%';
+        });
+
+        timelineClock.textContent = formatTime(clamped) + ' / ' + formatTime(TOTAL_DURATION);
+
+        // Deterministic smooth scene fade-in/out (never stuck at opacity 0 when paused)
+        const fadeIn = Math.min(1, sceneElapsed / 0.45);
+        const fadeOut = idx === SCENES.length - 1 ? 1 : Math.min(1, (scene.duration - sceneElapsed) / 0.35);
+        sceneEls[idx].style.opacity = String(Math.max(0.08, Math.min(fadeIn, fadeOut)).toFixed(3));
+
+        // Drive scene visuals deterministically
+        updateSceneChoreography(idx, sceneElapsed, scene.duration);
+      }
+
+      /* =======================================================================
+         8. PLAYBACK CONTROLLER (PLAY / PAUSE / RESUME / RESTART)
+         ======================================================================= */
+      function syncPlayButtonUI() {
+        iconPlay.style.display = 'none';
+        iconPause.style.display = 'none';
+        iconReplay.style.display = 'none';
+
+        if (state.isFinished) {
+          iconReplay.style.display = 'block';
+          btnPlayLabel.textContent = 'إعادة التشغيل';
+          btnPlay.setAttribute('aria-label', 'إعادة تشغيل الفيلم');
+        } else if (state.isPlaying) {
+          iconPause.style.display = 'block';
+          btnPlayLabel.textContent = 'إيقاف مؤقت';
+          btnPlay.setAttribute('aria-label', 'إيقاف الفيلم مؤقتاً');
+        } else {
+          iconPlay.style.display = 'block';
+          btnPlayLabel.textContent = state.hasStarted ? 'استكمال' : 'تشغيل';
+          btnPlay.setAttribute('aria-label', 'تشغيل الفيلم');
+        }
+      }
+
+      function tick(ts) {
+        if (!state.isPlaying) return;
+        if (state.lastFrameTs === null) state.lastFrameTs = ts;
+        const dt = Math.min(0.1, (ts - state.lastFrameTs) / 1000);
+        state.lastFrameTs = ts;
+
+        state.currentTime += dt;
+        if (state.currentTime >= TOTAL_DURATION) {
+          state.currentTime = TOTAL_DURATION;
+          renderAtTime(TOTAL_DURATION);
+          finishPlayback();
+          return;
+        }
+
+        renderAtTime(state.currentTime);
+        drawParticles(dt);
+        state.rafId = requestAnimationFrame(tick);
+      }
+
+      function startOrResume() {
+        if (state.isFinished) {
+          restartFilm();
+          return;
+        }
+        if (state.isPlaying) return;
+
+        state.hasStarted = true;
+        state.isPlaying = true;
+        state.lastFrameTs = null;
+        startOverlay.classList.add('hidden');
+        stage.classList.remove('is-paused');
+        syncPlayButtonUI();
+        renderAtTime(state.currentTime);
+        state.rafId = requestAnimationFrame(tick);
+      }
+
+      function pauseFilm() {
+        if (!state.isPlaying) return;
+        state.isPlaying = false;
+        if (state.rafId !== null) {
+          cancelAnimationFrame(state.rafId);
+          state.rafId = null;
+        }
+        state.lastFrameTs = null;
+        stage.classList.add('is-paused');
+        syncPlayButtonUI();
+      }
+
+      function finishPlayback() {
+        state.isPlaying = false;
+        state.isFinished = true;
+        if (state.rafId !== null) {
+          cancelAnimationFrame(state.rafId);
+          state.rafId = null;
+        }
+        stage.classList.add('is-paused');
+        syncPlayButtonUI();
+      }
+
+      function restartFilm() {
+        if (state.rafId !== null) {
+          cancelAnimationFrame(state.rafId);
+          state.rafId = null;
+        }
+        state.currentTime = 0;
+        state.isFinished = false;
+        state.activeSceneIndex = -1;
+        state.lastCaptionKey = '';
+        state.hasStarted = true;
+        state.isPlaying = true;
+        state.lastFrameTs = null;
+        startOverlay.classList.add('hidden');
+        stage.classList.remove('is-paused');
+        syncPlayButtonUI();
+        renderAtTime(0);
+        state.rafId = requestAnimationFrame(tick);
+      }
+
+      function togglePlayPause() {
+        if (state.isFinished) {
+          restartFilm();
+        } else if (state.isPlaying) {
+          pauseFilm();
+        } else {
+          startOrResume();
+        }
+      }
+
+      /* =======================================================================
+         9. FULLSCREEN API & KEYBOARD CONTROLS
+         ======================================================================= */
+      function isFullscreenActive() {
+        return Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+      }
+
+      function syncFullscreenUI() {
+        const fs = isFullscreenActive();
+        shell.classList.toggle('is-fullscreen', fs);
+        iconFsEnter.style.display = fs ? 'none' : 'block';
+        iconFsExit.style.display = fs ? 'block' : 'none';
+        btnFs.setAttribute('aria-label', fs ? 'الخروج من ملء الشاشة' : 'تكبير الشاشة');
+        fitStage();
+      }
+
+      function toggleFullscreen() {
+        try {
+          if (!isFullscreenActive()) {
+            const target = document.documentElement;
+            if (target.requestFullscreen) {
+              target.requestFullscreen().catch(() => {});
+            } else if (target.webkitRequestFullscreen) {
+              target.webkitRequestFullscreen();
+            }
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            }
+          }
+        } catch (_) {
+          // Graceful fallback if fullscreen is restricted by host container
+        }
+      }
+
+      document.addEventListener('fullscreenchange', syncFullscreenUI);
+      document.addEventListener('webkitfullscreenchange', syncFullscreenUI);
+
+      btnPlay.addEventListener('click', togglePlayPause);
+      heroPlayBtn.addEventListener('click', startOrResume);
+      btnFs.addEventListener('click', toggleFullscreen);
+
+      document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          togglePlayPause();
+        } else if (e.code === 'Escape') {
+          if (transcriptModal.classList.contains('open')) {
+            transcriptModal.classList.remove('open');
+          } else if (isFullscreenActive()) {
+            toggleFullscreen();
+          }
+        } else if (e.key === 't' || e.key === 'T' || e.key === 'ف') {
+          transcriptModal.classList.toggle('open');
+        }
+      });
+
+      /* =======================================================================
+         10. BOOTSTRAP (IDLE AT 00:00 — NO AUTOPLAY)
+         ======================================================================= */
+      buildTimelineSegments();
+      buildTranscript();
+      renderAtTime(0);
+      drawParticles(0);
+      syncPlayButtonUI();
+      syncFullscreenUI();
+
+      // Expose read-only diagnostic hook for automated QA verification
+      window.__GH_PAGES_FILM__ = {
+        get totalDuration() { return TOTAL_DURATION; },
+        get sceneCount() { return SCENES.length; },
+        get state() { return { ...state }; },
+        seekForTest(sec) {
+          state.currentTime = Math.max(0, Math.min(TOTAL_DURATION, sec));
+          startOverlay.classList.add('hidden');
+          renderAtTime(state.currentTime);
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
